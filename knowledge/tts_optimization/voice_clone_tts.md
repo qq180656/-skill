@@ -1,5 +1,13 @@
 <!-- v3.4 | 2026-09-10 -->
+<!-- v4.2.1 平台适配声明 2026-09-17 -->
 # 音色克隆与独立 TTS（mega_tts 声音复刻）
+
+> **平台适配声明**：本文原始接口为外部 BlueAI 网关的火山 mega_tts API。
+> 在小云雀平台环境中，TTS 语音合成应使用 `sandbox_generate_audio`（Type=tts），
+> 支持 VoiceDesc 自然语言音色描述和 Model 模型选择；视频内发声仍通过
+> `sandbox_generate_video` 的 AudioList 传参考音频实现音色锚定。
+> 本文的训练流程、音色选型（ICL1.0/DiT）、参数说明可作为方法论参考，
+> 实际调用方式见 `core/platform_adapter.md` 工具映射表。
 
 > 区分两条发音链路：
 > - **视频内发声**（默认）：Seedance `generate_audio=true`，角色按 prompt 的 @VOX 六维卡直接念白，适合绝大多数剧情/口播。

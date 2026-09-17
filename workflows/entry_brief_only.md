@@ -43,6 +43,7 @@
 
 ### Step 2.5: 创意设计 (CREATIVE_DESIGN) — 前贴和成片都必做
 - 调用 `wf_creative_design.md`，基于产品信息和类型要求产出创意设计文档
+- **平台创意助手旁路（可选加速）**：当用户意图较模糊或希望发散更多创意方向时，可先调用平台创意助手（`creative_agent`）进行创意发散，产出多个候选方向后再按本流程细化为 creative_design.md。创意助手的产出作为 Step 2 创意方案的输入素材，不替代合规校验和角色锁定流程
 - 产出内容：
   - 核心主题 Theme
   - 视觉调性 Visual Style（从 style_reference.md 选取，记录完整关键词）
@@ -73,9 +74,8 @@
 - 多条脚本用 === 分隔
 
 ### Step 4: 结构化解析 + 原子化拆解 + 合规校验
-- 同路径A的 Step 1、Step 2、Step 3 + **Step 3.5**（SCRIPT_PARSE + SCRIPT_ATOMIZE + COMPLIANCE_CHECK + **PRE_COMPLIANCE_GATE**）
+- 同路径A的 Step 1、Step 2、Step 3（SCRIPT_PARSE + SCRIPT_ATOMIZE + COMPLIANCE_CHECK）
 - ⚠️ **路径B 也必须走 SCRIPT_PARSE**：Step 3 撰写出的脚本仍需结构化解析（提取口播/警示语/角色元信息 → `parsed_script.json`），否则下游 SCRIPT_ATOMIZE 无结构化输入、多角色 AUDIO_ANCHOR 无角色来源（角色信息可与 creative_design.md 的角色设定互为补充）
-- ⚠️ **路径B 也必须跑 Step 3.5 确定性合规前置门**：Agent 撰写的脚本同样存在禁用词漏判风险，必须跑 `python scripts/pre_compliance_check.py --product {产品} --type {前贴/成片} --file {脚本文件} --json --strict` 做硬兜底，处理逻辑同 `entry_direct_script.md` Step 3.5
 - **前贴**: 三层全部读取（禁用表述校验），不挂警示语，不生成脚本标注文档（**原因：前贴不涉及利益点和警示语**），但仍输出 parsed_script.json（供下游分镜提取角色/场景信息）
 - **成片**: 三层全部读取（禁用表述+警示语挂载）+ 生成脚本警示语标注文档
 

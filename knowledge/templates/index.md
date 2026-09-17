@@ -9,13 +9,20 @@
 | `character_lock_protocol.md` | 角色锁定协议（四视图+多角色引用） | wf_creative_design / wf_storyboard（STORYBOARD）→ wf_generation 素材绑定 |
 | `storyboard_template.md` | 分镜表格式 | wf_storyboard（STORYBOARD） |
 | `prompt_craft_guide.md` | Prompt 编写指南（分层结构+运镜指令表） | wf_storyboard / wf_generation（Prompt构造） |
-| `style_reference.md` | 风格速查表（艺术风格+文化美学+情绪参数） | wf_creative_design（选风格） |
+| `style_reference.md` | 风格速查表（艺术风格+文化美学+情绪参数+日常穿搭风格速查） | wf_creative_design（选风格） |
 | `quality_control.md` | 出片自检清单 + KEEP/CHANGE 修改协议 | wf_delivery（QC）/ wf_edit / wf_repair |
 | `opening_hooks_library.md` | 开场方式库（40+种，画面描述+写法要点+Prompt示例+避坑） | wf_creative_design（开场选型） |
+| `reference_video_analysis.md` | 参考视频拆解案例库（19条优质保险视频逐帧拆解，含6种对话型Hook+3种旁白叙事型模式、5层信息递进、9套创作模板） | wf_creative_design（场景/角色选型）/ wf_storyboard（镜头调度参考） |
 | `broll_skills/broll_scene.md` | 空镜6大类型+12种玩法+各体裁空镜配比（通用） | wf_storyboard / wf_generation（按场景加载） |
 | `broll_skills/family_daily_broll.md` | 家庭日常空镜（不拍"生病"拍"力不从心"的微动作信号） | wf_storyboard / wf_generation（家庭场景） |
 | `broll_skills/hospital_broll.md` | 医院场景空镜（6大可拍区域+合规红线+安全替代） | wf_storyboard / wf_generation（医疗场景） |
 | `broll_skills/landmark_scene.md` | 地标/著名景点/航拍/FPV/延时定场空镜 | wf_storyboard / wf_generation（地标场景） |
+| `cinematic_narrative_tools.md` | 电影化叙事工具箱（命题先行/道具状态链/信息目标驱动/因果连续/蒙太奇连接/色调对比叙事） | wf_creative_design（命题与叙事设计）/ wf_storyboard（因果与蒙太奇写法）/ wf_generation（色调与旁白写法） |
+| `character_asset_pipeline.md` | 角色资产产线（S1验脸→S2面部四视图→S3全身四视图逐级传递出图+自检） | wf_creative_design / wf_generation（角色资产生成） |
+| `batch_fission_playbook.md` | 批量裂变操作手册（母版定版→版本矩阵→共享镜头→批量并发生成→按版本交付） | wf_creative_design / wf_generation / wf_delivery（多版本批量场景） |
+| `narrative_archetypes.md` | 保险叙事原型库（产品5种角色+四大险种叙事原型+七拍/十拍节拍表+Logline公式+人物弧光+可证伪测试） | wf_creative_design（创意选型/剧本结构） |
+| `visual_style_system.md` | 视觉风格系统（风格配方速选+色彩命题+60:30:10配色+四大险种12色方案+五子层光影量化+风格签名串） | wf_creative_design / wf_storyboard（视觉设计/光影配色） |
+| `director_shot_toolkit.md` | 导演镜头技法库（6种核心技法+构图关系压力+对方存在证据+动作闭环四拍+多镜切镜+运镜转场词库） | wf_storyboard（镜头设计/分镜规划） |
 
 > ⚠️ 下方 `script_template` / `asr_report_template` / `user_notify_template` 为**内联输出模板**（本文件内嵌，非独立 .md 文件），分别供 SCRIPT_PARSE 结构化输出 / VERIFYING 校验报告 / 用户交互通知 使用。
 

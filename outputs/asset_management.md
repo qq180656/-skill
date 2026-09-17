@@ -1,5 +1,13 @@
 <!-- v3.4 | 2026-09-10 -->
+<!-- v4.2.1 平台适配声明 2026-09-17 -->
 # 资产管理与真人版权素材（vendor_asset_id / LivenessFace）
+
+> **平台适配声明**：本文原始接口为外部 BlueAI 资产管理 API。
+> 在小云雀平台环境中，参考图片/视频/音频直接通过沙盒文件路径传入
+> `sandbox_generate_video` 的 ImageList/VideoList/AudioList，无需上传换
+> vendor_asset_id。PixVerse/Gaga/byteplus 等厂商渠道的资产管理流程仅在
+> 外部网关环境下需要。本文的真人版权合规要求（LivenessFace 活体授权、
+> 肖像权保护）仍然适用，平台环境同样不得绕过。
 
 > 解决"给图给链接在某些渠道用不了"的问题。
 > 多数生成接口收 URL；但 **PixVerse / Gaga / volcengine_visual / byteplus** 等只认**厂商资产 ID**，必须先上传素材换 `vendor_asset_id`，再填进生成接口的 `frame_images`/`input_references`/`provider`。

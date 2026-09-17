@@ -2,6 +2,11 @@
 # -*- coding: utf-8 -*-
 """生图→图生视频 完整链路（Seedream 5.0 + Seedance 2.5 image2video）。
 
+> **平台适配声明**：本脚本设计于外部 BlueAI 网关环境。在小云雀平台环境中，
+> 生图应使用 `sandbox_generate_image`，图生视频应使用 `sandbox_generate_video`
+> （ImageList 传首帧图），音色克隆应使用 `sandbox_generate_audio`（Type=tts）。
+> 见 `core/platform_adapter.md` 工具映射表。本脚本可作为链路逻辑参考。
+
 流程：
 1. Seedream text2image → 角色四视图设定稿（16:9横版）
 2. 裁出正面头肩特写（单张）

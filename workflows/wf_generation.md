@@ -54,7 +54,7 @@
 - 单段模式: 一次 text_to_video 工具调用
 - extend模式(30-60s): 前30s text_to_video + 后30s reference2video + ffmpeg拼接
 - 多段extend模式(>60s): 按30s分段，首段 text_to_video，后续各段以上一段末帧为参考做 reference2video，最后统一 ffmpeg 拼接
-- Key轮转: 3把Key按月/日额度轮转，当前Key超限（E014）自动切换下一把；全部超限→暂停通知用户等待次月重置
+- 积分管理: 生成前调用 `check_credit_quote` 确认积分余额充足；积分不足时暂停（E014）并通知用户充值，保留快照可续跑。详见 `core/platform_adapter.md` §二
 - 并发调度: 视频生成并发4，采用动态调度（完成一个立即启动下一个），不按固定批次等待；TTS克隆串行
 - **失败重试的并发占用**：
   - 重试**占用原任务槽位，不新增并发**；实际在跑任务数始终 ≤ 4
@@ -93,3 +93,78 @@
 - **台词来源**：仍逐字取自 `atomic_scripts.json` 对应原子，**禁止从原始脚本重组或改写**。
 - **重做后**：重新 SHOT_MERGE（仅拼接，不重做其他镜头）→ 回 VERIFYING 复检。
 - 重试上限 2 次（E006），计数纳入 `snapshot.json` 的 `retry_counters`（跨断点持久）。
+
+## 成片合成规范 (render_video) — 平台适配
+
+> 平台使用 `render_video` 工具完成多镜头拼接、BGM合入和字幕叠加，替代原ffmpeg手动拼接+ASS烧录链路。完整适配说明见 `core/platform_adapter.md` §五。
+
+### 合成参数
+
+| 参数 | 用途 | 保险项目用法 |
+|------|------|-------------|
+| `video_paths` | 多镜头按播放顺序拼接 | 传入各镜头 `shot_NN.mp4` 路径列表 |
+| `output_path` | 最终成片输出 | `assets/{project}/output.mp4` |
+| `bgm_audio_path` | BGM音频路径 | 由 `sandbox_generate_audio` Type=music 生成后传入；前贴通常不需要BGM |
+| `show_subtitle` | 自动语音转写字幕 | `true` 时平台自动识别视频/音频原声生成字幕；保险成片需手动生成警示语SRT，建议另存 |
+| `storyboard_path` | 从分镜JSON渲染 | 有storyboard.md时可直接传入渲染 |
+| `shot_ids` | 指定渲染分镜 | 重做部分镜头时只渲染指定ID |
+| `subtitle_scene` | 字幕模板 | 选择合适模板，不改变字幕文字/字号/位置 |
+| `pipeline_name` | 渲染模式 | MV模式传"mv"，普通视频不传 |
+
+### 合成流程
+
+1. **多镜头拼接**：所有镜头生成完成后，将 `shot_NN.mp4` 路径列表传入 `video_paths`，调用 `render_video` 拼接成片
+2. **BGM合入**（按需）：前贴一般不加BGM（生活场景自然音）；成片如需BGM，先用 `sandbox_generate_audio` Type=music 生成，再传入 `bgm_audio_path`
+3. **字幕叠加**（按需）：
+   - 口播字幕：`show_subtitle: true` 让平台自动转写生成
+   - 警示语字幕：平台不识别保险警示语，需Agent在沙盒内手动生成SRT文件，不通过render_video烧录
+4. **双版本交付**：无字幕原版 + 有字幕版本分别保存
+
+### 与原ffmpeg链路的差异
+
+| 原方案 | 平台方案 | 说明 |
+|--------|---------|------|
+| ffmpeg concat拼接 | `render_video` video_paths | 平台原生拼接，更稳定 |
+| ASS双层字幕烧录 | `render_video` show_subtitle=true | 平台自动字幕替代手动ASS |
+| ffmpeg音频替换/crossfade | `sandbox_bash` 执行ffmpeg | 修复场景仍用ffmpeg命令 |
+| ffprobe校验 | `sandbox_bash` 执行ffprobe | QC校验不变 |
+
+### 成片BGM生成规范 — 平台适配
+
+> 多段成片的配乐由 `sandbox_generate_audio`（Type=music）生成一条统一音轨，经 `render_video` 的 `bgm_audio_path` 合入。各段 Prompt 通用尾注写"禁止生成BGM"，段内禁、成片整体加。单段视频的 BGM 由视频模型随画面自带。
+
+**歌词判定（带唱 vs 纯音乐）**：
+- 保险视频几乎全部为纯音乐（含口播人声，不能被歌词盖住）
+- 用户明示要歌/带唱 → 带唱（Lyrics必传）
+- 成片任一段含台词/旁白 → 纯音乐（人声歌词会盖住说话）
+- 全片无人声且总时长≥20s且内容是情绪叙事线 → 可带唱
+
+**参数构造**：
+| 参数 | 取值 |
+|------|------|
+| Type | "music" |
+| MusicPrompt | 中文叙事句式，按成片节拍表逐段描述音乐本身，不写歌词 |
+| Lyrics | 带唱时传歌词；纯音乐不传 |
+| DurationSec | 成片总时长 |
+| OutputPath | `assets/{project}/bgm.mp3`；重配用 `bgm_v2.mp3` 递增 |
+
+**MusicPrompt写法**：
+1. 先建成片节拍表：从分镜表各段Prompt的阶段描述+时长，换算成片绝对秒数，逐段记情绪/能量/有无台词/命中点
+2. 按节拍表组句：中文叙事句式，段落行与节拍表一一对应，相邻段落至少一项可听变化
+3. 保险项目典型调性：温暖治愈(indie folk, acoustic guitar, warm piano) / 专业信赖(minimal piano, ambient electronic) / 紧急紧张(dark ambient, pulsing bass)
+
+**执行约束**：
+- 全片只生成一条BGM，一次调用，时机在所有视频段生成完成后、render_video前
+- 生成失败不重试、不阻塞成片：按无BGM合成交付，告知用户可补配
+- bgm_audio_path 只接受 music 类型产物或用户提供的音乐文件
+
+### 成片状态账本
+
+> 任何段被修改后产出 `shot_NN_v2.mp4`（递增 v3/v4…），禁止覆盖旧文件。每次重调 `render_video` 前必须完整继承当前成片状态。
+
+**账本字段**：
+- 段顺序与每段生效版本（段号 → 生效文件路径）
+- show_subtitle 当前值
+- bgm_audio_path 当前值（有则必须带上，防止删段/换序后丢音乐）
+
+任一状态项在重拼时被遗漏 = 用户已确认的效果被静默回退，属违规。

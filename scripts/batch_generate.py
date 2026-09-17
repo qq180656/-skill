@@ -2,6 +2,13 @@
 # -*- coding: utf-8 -*-
 """Seedance 批量视频生成引擎 (batch_generate.py)
 
+> **平台适配声明**：本脚本设计于外部 BlueAI 网关环境（BMC API + Key池轮转）。
+> 在小云雀平台环境中，视频生成应使用 `sandbox_generate_video`，积分查询使用
+> `check_credit_quote`，Key管理已替换为积分管理（见 `core/platform_adapter.md`）。
+> 本脚本可作为批量生成的算法参考（分段/并发/断点续跑/日志），但需适配平台工具
+> 才能直接运行。参数中心 `skill_config.py` 中的语速/水印/发音规避/CSV字段等
+> 非API依赖的配置仍可直接复用。
+
 通用引擎——与具体保险产品/业务无关，任何需要 Seedance text2video /
 reference2video 的项目都能用。
 

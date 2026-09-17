@@ -26,6 +26,6 @@
 | E011 | 脚本解析失败（格式无法识别/内容为空/编码错误） | USER_INPUT_NEEDED | 请用户重新提供脚本或确认文件格式 |
 | E012 | 音色锚定/TTS接口异常（分两种场景） | RECOVERABLE | ①接口调用失败（500/超时）：重试3次（立即/10s/30s），仍失败则降级标准TTS，不阻断；②音色锚定效果不达标：不重试接口，记录警告，后期修复时回退到从原视频提取参考音 |
 | E013 | 时长超限（脚本预估时长超出模型能力且无法extend） | USER_INPUT_NEEDED | 询问缩短脚本或拆分为多条视频 |
-| E014 | API Key额度超限 | RECOVERABLE | 自动切换下一把Key（3把轮转）；全部超限→USER_INPUT_NEEDED，通知用户等待次月重置或手动提供新Key |
+| E014 | 积分余额不足 | RECOVERABLE | 暂停当前任务，调用 `check_credit_quote` 确认余额；通知用户充值后续跑（保留快照，充值后从断点恢复）；原BlueAI Key池轮转方案已废弃，详见 `core/platform_adapter.md` §二 |
 | E015 | 分镜规划失败（无法合理拆解镜头/Prompt构造失败/时长预估不合理） | USER_INPUT_NEEDED | 展示分镜问题，请用户调整脚本或确认分镜方案 |
 

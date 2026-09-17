@@ -36,3 +36,33 @@
 | extend模式 | 单段超模型上限:前段text2video+后段reference2video+ffmpeg拼接 |
 | 音色锚定(AUDIO_ANCHOR) | 为多角色/指定音色生成音色样本，作生成/修复参考音 |
 | VIDEO_REDO | 单镜头重做:insert/delete或镜头失败时仅重生该镜头 |
+| 保留式修改 | 用户对现有画面满意只做有界调整（换BGM/加字幕/删段/超分/擦字幕），不重新生成视频 |
+
+## 面向用户术语转译表
+
+> 与用户交流时，内部技术名词必须转译为用户可理解的表达。自检方法：把发给用户的话里所有技术token（文件名、工具名、内部代号）删掉后，句子仍通顺、信息不缺才允许发出。
+
+| 内部术语（禁止透出） | 对用户说 |
+|-------------------|---------|
+| creative_design.md | 创意文档 |
+| storyboard.md | 分镜规划 |
+| atomic_scripts.json / 原子脚本 | 口播文案拆解稿 |
+| shot_NN / shot | 第N个分镜（或"第N段"） |
+| _task_ids.jsonl | 任务记录 |
+| _视频日志.csv | 视频生成日志 |
+| snapshot.json | 状态快照 |
+| repair_log | 修复记录 |
+| AUDIO_REPAIR / AUDIO_ANCHOR | 发音修复 / 音色锚定 |
+| VIDEO_REDO | 镜头重做 |
+| KEEP/CHANGE | 保留原有画面只改X / 重做X部分 |
+| extend模式 | 分段拼接 |
+| TaskType=edit/extend/keyframe | 视频编辑/视频延长/首帧锁定 |
+| ImageList/VideoList/AudioList | 参考图片/参考视频/参考音频 |
+| render_video / sandbox_generate_video 等工具名 | 用动作描述（"合成成片""生成视频"） |
+| security_filter_error / code=12002 等错误码 | "该镜头未通过内容审核" |
+| LUFS / crossfade / SNR | 音量标准 / 平滑过渡 / 信噪比 |
+| ASR | 语音识别 |
+| VOX LOCK / 六维音色卡 | 统一配音音色 |
+| check_credit_quote | 确认积分够不够 |
+| list_capabilities | 查询可用模型 |
+| sandbox_process_video | 视频后处理（超分/擦字幕） |
