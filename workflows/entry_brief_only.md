@@ -73,8 +73,9 @@
 - 多条脚本用 === 分隔
 
 ### Step 4: 结构化解析 + 原子化拆解 + 合规校验
-- 同路径A的 Step 1、Step 2、Step 3（SCRIPT_PARSE + SCRIPT_ATOMIZE + COMPLIANCE_CHECK）
+- 同路径A的 Step 1、Step 2、Step 3 + **Step 3.5**（SCRIPT_PARSE + SCRIPT_ATOMIZE + COMPLIANCE_CHECK + **PRE_COMPLIANCE_GATE**）
 - ⚠️ **路径B 也必须走 SCRIPT_PARSE**：Step 3 撰写出的脚本仍需结构化解析（提取口播/警示语/角色元信息 → `parsed_script.json`），否则下游 SCRIPT_ATOMIZE 无结构化输入、多角色 AUDIO_ANCHOR 无角色来源（角色信息可与 creative_design.md 的角色设定互为补充）
+- ⚠️ **路径B 也必须跑 Step 3.5 确定性合规前置门**：Agent 撰写的脚本同样存在禁用词漏判风险，必须跑 `python scripts/pre_compliance_check.py --product {产品} --type {前贴/成片} --file {脚本文件} --json --strict` 做硬兜底，处理逻辑同 `entry_direct_script.md` Step 3.5
 - **前贴**: 三层全部读取（禁用表述校验），不挂警示语，不生成脚本标注文档（**原因：前贴不涉及利益点和警示语**），但仍输出 parsed_script.json（供下游分镜提取角色/场景信息）
 - **成片**: 三层全部读取（禁用表述+警示语挂载）+ 生成脚本警示语标注文档
 

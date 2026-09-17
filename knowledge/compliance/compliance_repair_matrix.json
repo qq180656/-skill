@@ -1,0 +1,245 @@
+{
+  "_meta": {
+    "name": "合规修复策略映射表",
+    "version": "1.0",
+    "description": "定义 pre_compliance_check.py 每种 finding 对应的自动修复动作。上层工作流（PLANNING 阶段的 COMPLIANCE_CHECK）读取此映射表，根据返回的 fix_action.action + fix_action.auto 决定是自动执行还是暂停交给用户。",
+    "usage": "Agent 在 PLANNING → COMPLIANCE_CHECK 步骤中，调用 pre_compliance_check.py --json 获得结构化结果后，按本表逐条匹配执行。"
+  },
+
+  "repair_strategies": [
+    {
+      "match": {
+        "action": "REPLACE",
+        "auto": true,
+        "category": "禁用串"
+      },
+      "strategy": {
+        "name": "禁用词自动替换",
+        "execute": "script_replace",
+        "params": {
+          "target": "{fix_action.target}",
+          "replacement": "{fix_action.replacement}"
+        },
+        "post_action": "RE_RUN_CHECK",
+        "description": "将脚本中的禁用词替换为合规表述，替换后重新跑一次 pre_compliance_check 确认无新问题"
+      }
+    },
+
+    {
+      "match": {
+        "action": "REPLACE",
+        "auto": false,
+        "category": "禁用串"
+      },
+      "strategy": {
+        "name": "禁用词人工确认替换",
+        "execute": "user_confirm",
+        "params": {
+          "message": "脚本中发现禁用词 '{fix_action.target}'，建议替换为 '{fix_action.replacement}'，是否同意？",
+          "options": ["同意替换", "我来手动改", "保留不改（自行承担拒审风险）"]
+        },
+        "on_accept": "script_replace + RE_RUN_CHECK",
+        "on_reject": "标记 WARN 并继续",
+        "description": "涉及医护形象/饥饿促销等场景级改写，替换可能影响上下文语义，需用户确认"
+      }
+    },
+
+    {
+      "match": {
+        "action": "ADD_WARN",
+        "auto": true,
+        "category": "警示语缺挂"
+      },
+      "strategy": {
+        "name": "警示语自动补挂",
+        "execute": "append_disclaimer",
+        "params": {
+          "warning_text": "{fix_action.warning_text}",
+          "trigger_word": "{fix_action.trigger_word}",
+          "position": "AFTER_TRIGGER"
+        },
+        "post_action": "RE_RUN_CHECK",
+        "description": "在触发句后紧跟插入警示语括号，TTS 不读、仅字幕展示。补挂后重跑校验确认配平"
+      }
+    },
+
+    {
+      "match": {
+        "action": "USER_DECIDE",
+        "category": "警示语缺挂"
+      },
+      "strategy": {
+        "name": "警示语人工补挂",
+        "execute": "user_confirm",
+        "params": {
+          "message": "第{line}行含触发词但无法自动匹配警示语模板，需手动补挂。请参考产品专属文件。",
+          "options": ["我来手动补挂", "跳过（不补挂）"]
+        },
+        "on_accept": "等待用户编辑后 RE_RUN_CHECK",
+        "on_reject": "阻断流程，不允许进入 STORYBOARD",
+        "description": "触发词不在模板库中，必须参考产品专属投放注意事项文件手动补挂"
+      }
+    },
+
+    {
+      "match": {
+        "action": "FIX_FORMAT",
+        "auto": true,
+        "category": "格式修正"
+      },
+      "strategy": {
+        "name": "格式自动修正",
+        "execute": "script_replace",
+        "params": {
+          "target": "{fix_action.target}",
+          "replacement": "{fix_action.replacement}"
+        },
+        "post_action": "RE_RUN_CHECK",
+        "description": "如 '0免赔'→'0免赔额'、'100%'→'100%比例报销' 等确定性格式修正"
+      }
+    },
+
+    {
+      "match": {
+        "action": "REPLACE",
+        "auto": false,
+        "category": "必加项缺失"
+      },
+      "strategy": {
+        "name": "产品名补全确认",
+        "execute": "user_confirm",
+        "params": {
+          "message": "脚本中未出现完整产品名，需添加 '{fix_action.replacement}'。请确认插入位置。",
+          "options": ["自动插入到脚本末尾", "自动插入到脚本开头", "我来手动加"]
+        },
+        "on_accept": "script_insert + RE_RUN_CHECK",
+        "on_reject": "阻断流程",
+        "description": "产品名缺失会导致拒审，必须补全。位置由用户确认"
+      }
+    },
+
+    {
+      "match": {
+        "action": "USER_DECIDE",
+        "category": "必加项缺失"
+      },
+      "strategy": {
+        "name": "额外必加项人工确认",
+        "execute": "user_confirm",
+        "params": {
+          "message": "{detail}，需添加 '{fix_action.options[0]}' 到脚本中",
+          "options": ["同意添加", "我来手动加"]
+        },
+        "on_accept": "script_insert + RE_RUN_CHECK",
+        "on_reject": "阻断流程",
+        "description": "如门诊险必须包含'支付宝上的'三个字"
+      }
+    },
+
+    {
+      "match": {
+        "action": "USER_DECIDE",
+        "category": "绝对化软词"
+      },
+      "strategy": {
+        "name": "绝对化词人工复核",
+        "execute": "user_confirm",
+        "params": {
+          "message": "脚本中出现绝对化词 '{context}'，需人工判断是否为官方合规话术",
+          "options": ["是官方话术，保留", "不是，替换为'可/能/部分'", "直接删除"]
+        },
+        "on_accept_keep": "标记白名单并继续",
+        "on_accept_replace": "script_replace + RE_RUN_CHECK",
+        "on_accept_remove": "script_remove + RE_RUN_CHECK",
+        "description": "白名单内的'最高/最低/最长'是官方话术不算违规；其余'都/全/均'需人工判断"
+      }
+    },
+
+    {
+      "match": {
+        "action": "REMOVE",
+        "auto": true,
+        "category": "前贴利益点"
+      },
+      "strategy": {
+        "name": "前贴利益点自动删除",
+        "execute": "script_remove",
+        "params": {
+          "target": "{fix_action.target}"
+        },
+        "post_action": "RE_RUN_CHECK",
+        "description": "前贴只引产品名不讲利益点，出现的保额/保费/比例等关键词直接删除"
+      }
+    },
+
+    {
+      "match": {
+        "action": "USER_DECIDE",
+        "category": "字数超限"
+      },
+      "strategy": {
+        "name": "字数超限人工精简",
+        "execute": "user_confirm",
+        "params": {
+          "message": "口播{n}字超出前贴上限{cap}字，需精简{excess}字。建议精简方向：1)去掉重复修饰语 2)合并短句 3)删减非核心信息",
+          "options": ["我来精简", "AI帮我精简"]
+        },
+        "on_accept_manual": "等待用户编辑后 RE_RUN_CHECK",
+        "on_accept_ai": "auto_trim + RE_RUN_CHECK",
+        "description": "字数超限需要语义理解来精简，不自动删字（可能破坏语义完整性）"
+      }
+    },
+
+    {
+      "match": {
+        "action": "USER_DECIDE",
+        "category": "产品名位置"
+      },
+      "strategy": {
+        "name": "产品名位置调整建议",
+        "execute": "notify_only",
+        "params": {
+          "message": "产品名当前在{pct}%处，建议调整到75-85%处（前贴优化区间）"
+        },
+        "description": "仅提醒，不阻断流程。产品名位置影响转化效果但不影响合规"
+      }
+    },
+
+    {
+      "match": {
+        "action": "USER_DECIDE",
+        "category": "责任内前缀"
+      },
+      "strategy": {
+        "name": "责任内前缀确认",
+        "execute": "user_confirm",
+        "params": {
+          "message": "口播未说'责任内'，部分警示语可能需要加（责任内）前缀。是否添加？",
+          "options": ["给相关警示语加前缀", "口播中补说'责任内'", "不需要加"]
+        },
+        "on_accept_prefix": "add_prefix_to_warnings + RE_RUN_CHECK",
+        "on_accept_spoken": "script_replace + RE_RUN_CHECK",
+        "on_reject": "标记 WARN 并继续",
+        "description": "正文说了'责任内'则警示语不重复加；没说则需在警示语中加前缀"
+      }
+    }
+  ],
+
+  "execution_rules": {
+    "RE_RUN_CHECK": "修复后重新执行 pre_compliance_check.py，直到 status=PASS 或达到最大重试次数(3)",
+    "max_retries": 3,
+    "retry_exhausted": "达到最大重试次数仍有 ERROR → 阻断流程，进入 WAITING_USER 状态",
+    "batch_execution": "同一批 finding 中 auto=true 的项目可批量执行，auto=false 的项目逐个确认",
+    "priority_order": ["禁用串", "必加项缺失", "警示语缺挂", "格式修正", "字数超限", "前贴利益点", "绝对化软词", "责任内前缀", "产品名位置"],
+    "priority_description": "ERROR 级别先于 WARN 级别执行；同为 ERROR 时按优先级排序：禁用词>必加项>警示语>格式>字数"
+  },
+
+  "workflow_integration": {
+    "stage": "PLANNING → COMPLIANCE_CHECK (entry_direct_script.md Step 3)",
+    "trigger": "脚本原子化拆解完成后、进入 STORYBOARD 之前",
+    "input": "原子脚本列表 + 产品标识 + 类型(前贴/成片)",
+    "output_pass": "合规报告(Pass) → 进入 STORYBOARD",
+    "output_fail": "合规报告(Fail) → 按修复策略执行 → RE_RUN_CHECK → PASS or WAITING_USER",
+    "relationship_with_gate_verify": "pre_compliance_check 是生成前预测门(软拦+修复建议)；gate_verify 是送审前最终门(硬拦+exit 1)。两者串联使用，不可互相替代"
+  }
+}

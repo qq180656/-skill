@@ -46,13 +46,14 @@
 | 产物 | 格式 | 路径 | 说明 |
 |------|------|------|------|
 | 修复音频 | WAV | {project}/_session/repair_{NN}.wav | AUDIO_REPAIR输出 |
-| 修复日志 | JSON | {project}/_session/repair_log_{NN}.json | 含尝试次数/策略/结果 |
+| 修复日志 | JSON | {project}/_session/repair_log_{NN}.json | 含尝试次数/策略/结果/error_position/error_type |
+| 接缝校验报告 | JSON | {project}/_session/seam_check_{shot_id}.json | KEEP/CHANGE接缝校验输出（7维度比对结果+补偿记录），见 `scripts/visual_anchor_spec.md` |
 
 ## 7. 状态快照
 
 | 产物 | 格式 | 路径 | 说明 |
 |------|------|------|------|
-| 状态快照 | JSON | {project}/_session/snapshot.json | WAITING_USER前保存含状态ID/已完成镜头/中间产物路径/**retry_counters（各任务·各镜头累计重试次数，跨断点持久不清零，防止恢复后绕过修复上限）** |
+| 状态快照 | JSON | {project}/_session/snapshot.json | WAITING_USER前保存含状态ID/已完成镜头/中间产物路径/**retry_counters（四层复合键 `{shot_id: {error_position: {error_type: {repair_strategy: count}}}}`，跨断点持久不清零，防止恢复后绕过修复上限；结构定义与迁移规则见 `scripts/retry_counters_spec.md`）** |
 
 ## 8. 恢复校验
 

@@ -58,7 +58,8 @@
 - 用户确认后进入 Step 4
 
 ### Step 4: 原子化拆解 + 合规校验 + 分镜
-- 同 `entry_direct_script.md` 的 Step 2（SCRIPT_ATOMIZE）、Step 3（COMPLIANCE_CHECK）、Step 4（STORYBOARD）
+- 同 `entry_direct_script.md` 的 Step 2（SCRIPT_ATOMIZE）、Step 3（COMPLIANCE_CHECK）、**Step 3.5（PRE_COMPLIANCE_GATE）**、Step 4（STORYBOARD）
+- ⚠️ **路径C 也必须跑 Step 3.5 确定性合规前置门**：合并后的脚本（含用户原始片段+补齐内容）同样需跑 `python scripts/pre_compliance_check.py --product {产品} --type {前贴/成片} --file {脚本文件} --json --strict` 做硬兜底，处理逻辑同 `entry_direct_script.md` Step 3.5
 - **前贴**: 三层全部读取（禁用表述校验），不挂警示语，不生成脚本标注文档
 - **成片**: 三层全部读取 + 警示语挂载 + 生成脚本标注文档
 - **用户片段已有断句的预处理**（SCRIPT_ATOMIZE 前）：
