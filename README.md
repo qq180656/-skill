@@ -1,5 +1,37 @@
 # 保险行业AI视频批量生产规范 v4.2
 
+> 保险行业 AI 视频批量生产的端到端执行规范:路由 → 三层合规 → 创意/分镜 → 生成 → 校验 → 交付。作为 Claude Code skill 使用(入口 `~/.claude/skills/ai-video-production/`,细节按需 Read 本库对应文件)。
+
+## 目录结构
+
+```
+core/         路由与状态机
+  router.md            路由判定(A完整脚本 / B Brief / C混合 / EDIT)
+  state_machine.md     状态主干与不可跳过门
+  error_handler.md     异常分级与处理
+  task_registry.md     任务 / 进度登记
+  platform_adapter.md  平台适配层(Key / 网关 / 端点)
+workflows/    各阶段工作流
+  entry_*.md           四种入口(direct_script / brief_only / mixed / edit)
+  wf_creative_design · storyboard · generation · verification · delivery · repair.md
+knowledge/
+  compliance/          三层合规(通用规则 / 险种专项 / 产品专属拒审点)
+  templates/           创意与分镜模板(prompt_craft_guide / multi_scene_director /
+                       broll_skills / 导演分镜工具箱 / 叙事原型 / 视觉风格系统 …)
+  tts_optimization/    发音 · TTS · 断句规则
+  video_parameters/    模型参数 / 字幕烧录 / ASR / 分段打包
+scripts/      可执行工具
+  skill_config.py      参数中心(Key 走环境变量)
+  image_to_video.py    生图 → 图生视频 / 多模态参考生视频
+  batch_generate.py    批量生成引擎
+  gate_verify.py / pre_compliance_check.py   合规门 / 分镜前预合规校验
+  validate_storyboard.py / count_chars.py    分镜验算 / 台词耗时预计算
+meta/         changelog / glossary / 修订上下文
+outputs/      交付标准 / 资产管理 / 暗水印编号规范
+```
+
+> ⚠️ 密钥不入库:`scripts/skill_config.py` 从环境变量 `BLUEAI_GW_KEYS` / `BLUEAI_LLM_KEYS` 读取(逗号分隔),格式见 `.env.example`;本机用 `setx` 设一次。
+
 ## 变更日志 (Changelog)
 
 ### [v4.2] - 2026-09-17
