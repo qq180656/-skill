@@ -1,0 +1,31 @@
+# === 密钥 / 凭据(绝不提交) ===
+_secrets.py
+.env
+*.key
+secret.key
+config.enc
+*cookies*.json
+*token*.json
+
+# === 运行时产物 ===
+*_records.json
+_task_records.json
+_task_ids.jsonl
+_视频日志.csv
+_session/
+成片/
+参考图/
+角色参考库/
+_参考图索引.jsonl
+
+# === Python ===
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# === 系统 ===
+.DS_Store
+Thumbs.db
+chrome_profile/
