@@ -14,8 +14,8 @@
 | CREATIVE_DESIGN | 创意设计 | 用户意图已明确（仅路径B） | creative_design.md产出并获用户确认 | -> WAITING_USER(需修改创意) |
 | PLANNING | 脚本就绪 | 路径A:用户脚本已解析 / 路径B:creative_design.md已确认 / 路径C:片段+需求合并脚本已确认 | 原子脚本列表+合规报告就绪；成片需脚本标注文档获用户确认 | -> WAITING_USER(合规需决策/脚本需修改) |
 | STORYBOARD | 分镜规划 | PLANNING完成（原子脚本列表+合规报告已就绪） | storyboard.md产出并获用户确认 | -> WAITING_USER(需修改分镜) |
-| ASSET_PREP | 资产准备 | storyboard.md已确认 | 分镜所需参考图/场景图/首帧、音色、厂商资产ID全部就绪（缺则生成/训练/上传，见image_generation/voice_clone_tts/asset_management） | -> WAITING_USER(真人认证/素材确认) |
-| READY | 就绪 | ASSET_PREP完成、素材齐全 | 用户确认分镜和脚本标注文档后进入生成（固定的生成前确认门，非临时暂停；注：审核文档是生成后ASR版产物，不在此门确认，READY 确认的是脚本标注文档=警示语确认版） | -> WAITING_USER(需确认) |
+| ASSET_PREP | 资产准备 | storyboard.md已确认 | 分镜所需参考图/场景图/首帧、音色、厂商资产ID全部就绪（缺则生成/训练/上传，见image_generation/voice_clone_tts/asset_management）；**路径二（多图参考）：生成的角色四视图和场景图必须展示给用户确认——角色外貌/年龄/服装/场景是否符合预期，用户说"换"则重新生成，确认后才进 READY** | -> WAITING_USER(真人认证/素材确认/**角色形象需修改**) |
+| READY | 就绪 | ASSET_PREP完成、素材齐全、**角色形象已获用户确认（路径二）** | 用户确认分镜和脚本标注文档后进入生成（固定的生成前确认门，非临时暂停；注：审核文档是生成后ASR版产物，不在此门确认，READY 确认的是脚本标注文档=警示语确认版）；**READY 确认清单：①分镜表 ②合规报告 ③预估时长 ④角色参考图（路径二，含外貌/年龄/服装确认） ⑤脚本标注文档（成片）** | -> WAITING_USER(需确认) |
 | GENERATING | 生成中 | 用户确认 | 所有镜头视频文件就绪 | -> REPAIRING(单镜头失败) |
 | VERIFYING | 校验中 | 视频文件就绪 | 前贴:ASR+发音Diff通过 / 成片:ASR+发音Diff+警示语全部通过 | -> REPAIRING(发音错误) |
 | DELIVERING | 交付中 | 校验通过 | 产物组装+质检完成 | -> WAITING_USER(质检异常) |
