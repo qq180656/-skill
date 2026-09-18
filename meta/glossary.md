@@ -9,7 +9,7 @@
 | 逐字稿 | ASR words **直出**的逐字时间戳数据，**字幕链路唯一源头**。两份同存 `{项目}/{日期}/字幕/`：`{名称}_逐字稿.srt`（每字一条，人看/播放器可加载）+ `{名称}_words.json`（`[{"text":"字","start":0.32,"end":0.36}]`，程序读取）。不经LLM、不做断句/合并/纠错（规范：asr_processing.md 第10.5章） |
 | 口播字幕 | `{名称}_口播字幕.srt`，句级（≤13字/行）观众看/烧入用；**由逐字稿派生**（`逐字稿 → LLM语义断句 → 口播字幕`，时间戳取逐字稿词时间戳），**不是**独立再跑一次 ASR 的产物 |
 | 发音Diff | 原子脚本(期望朗读文本 expected_readback_text)与ASR识别结果的文本差异分析；基准是原子化后文本，**非原始脚本** |
-| REPLACE | 差异类型:同位置文字不同=发音错误 → wf_repair 音频替换(AUDIO_REPAIR)可修复 |
+| REPLACE | 差异类型:同位置文字不同=发音错误 → wf_correction 音频替换(AUDIO_REPAIR)可修复 |
 | INSERT | 差异类型:原子脚本有ASR没有=漏念 → VIDEO_REDO 重做镜头 |
 | DELETE | 差异类型:ASR有原子脚本没有=多念 → VIDEO_REDO 重做镜头 |
 | SKIP(差异) | 差异类型:可接受差异(过滤规则命中)，不修复（大小写与 REPLACE/INSERT/DELETE 等同） |

@@ -192,7 +192,7 @@
 # -----|----------
 # core/state_machine.md §3 修复约束 | 更新 retry_counters 描述为复合键结构，引用本文件
 # outputs/intermediate_artifacts.md §7 状态快照 | 更新 retry_counters 字段说明为复合键
-# workflows/wf_repair.md Step 5 | 升级判定逻辑引用本文件的 check_escalation() 规则
+# workflows/wf_correction.md Step 5 | 升级判定逻辑引用本文件的 check_escalation() 规则
 # workflows/wf_verification.md Step 3 | DIFF_ANALYSIS 输出必须包含 error_position（已有时间戳，需显式提取为区间字符串）
 # core/error_handler.md | E005/E006 升级判定引用本文件的复合计数规则
 

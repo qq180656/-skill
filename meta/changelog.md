@@ -175,7 +175,7 @@
 - [MOD] entry_brief_only.md — 前贴字数上限改为(目标时长−2s缓冲)×语速，避免填满上限生成超时
 ### 协调（交叉依赖）
 - [X-REF] image_generation（生图）→ character_lock_protocol（逐镜传参）→ wf_storyboard 1d素材就绪门控
-- [X-REF] voice_clone_tts ← wf_repair AUDIO_REPAIR升级链（修复失败时训练专属音色）
+- [X-REF] voice_clone_tts ← wf_correction AUDIO_REPAIR升级链（修复失败时训练专属音色）
 - [X-REF] asset_management ← ASSET_PREP（真人版权素材/给链接渠道）
 ### 端到端验证（好医保中老年脚本1，路径A走通）
 - ✅ 警示语在SCRIPT_PARSE已剥离，190字打包对象不含警示语→不会截断（字幕层单独挂载）
@@ -220,7 +220,7 @@
 - **wf_generation**：纯动作镜头计入总时长；旁白穿插音色锚定；重试占原并发槽+模型不可用降级；extend任务记录task_id数组+费用求和；末帧管理；单镜重做降级判定(1次微调Prompt/2次降分辨率)
 - **wf_delivery**：前贴/成片产物分目录；同名覆盖旧版入_历史版本+batch_id；日志跨日去重BATCH START；视频可播放性ffprobe闸门；+2s缓冲来源；SRT UTF-8无BOM/LF；回退分级；清理白名单
 - **wf_edit**：混合修改取最深类型；边界模糊判定；KEEP/CHANGE接缝校验；台词改后时长重算；音量归一化(人声-16/BGM-24 LUFS侧链压低)；产物版本识别；未改部分回归校验；edit_reason/before-after_snapshot溯源
-- **wf_repair**：参考音频质量(SNR≥15dB/无BGM/单人)；正确文本来源优先级；拼接crossfade+LUFS对齐+采样率声道一致；局部ASR复检；升级时间成本提示；换表达操作流程；error_position累计索引
+- **wf_correction**：参考音频质量(SNR≥15dB/无BGM/单人)；正确文本来源优先级；拼接crossfade+LUFS对齐+采样率声道一致；局部ASR复检；升级时间成本提示；换表达操作流程；error_position累计索引
 - **wf_verification**：ASR置信度不达标处理；占位符清单；同音异形拼音判定(声调不同算错)；insert/delete粒度分级；警示语模糊匹配容错；SRT完整格式规范；多SRT时间轴布局；人工审核按风险分级(自动通过/低风险/高风险)
 - 全部文档订正过时语速"好医保8字/秒"→统一7字/秒
 

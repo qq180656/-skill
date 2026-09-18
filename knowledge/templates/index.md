@@ -10,7 +10,7 @@
 | `storyboard_template.md` | 分镜表格式 | wf_storyboard（STORYBOARD） |
 | `prompt_craft_guide.md` | Prompt 编写指南（分层结构+运镜指令表） | wf_storyboard / wf_generation（Prompt构造） |
 | `style_reference.md` | 风格速查表（艺术风格+文化美学+情绪参数+日常穿搭风格速查） | wf_creative_design（选风格） |
-| `quality_control.md` | 出片自检清单 + KEEP/CHANGE 修改协议 | wf_delivery（QC）/ wf_edit / wf_repair |
+| `quality_control.md` | 出片自检清单 + KEEP/CHANGE 修改协议 | wf_delivery（QC）/ wf_edit / wf_correction |
 | `opening_hooks_library.md` | 开场方式库（40+种，画面描述+写法要点+Prompt示例+避坑） | wf_creative_design（开场选型） |
 | `reference_video_analysis.md` | 参考视频拆解案例库（19条优质保险视频逐帧拆解，含6种对话型Hook+3种旁白叙事型模式、5层信息递进、9套创作模板） | wf_creative_design（场景/角色选型）/ wf_storyboard（镜头调度参考） |
 | `broll_skills/broll_scene.md` | 空镜6大类型+12种玩法+各体裁空镜配比（通用） | wf_storyboard / wf_generation（按场景加载） |

@@ -17,8 +17,9 @@
 | ASSET_PREP | 资产准备 | storyboard.md已确认 | 分镜所需参考图/场景图/首帧、音色、厂商资产ID全部就绪（缺则生成/训练/上传，见image_generation/voice_clone_tts/asset_management）；**路径二（多图参考）：生成的角色四视图和场景图必须展示给用户确认——角色外貌/年龄/服装/场景是否符合预期，用户说"换"则重新生成，确认后才进 READY** | -> WAITING_USER(真人认证/素材确认/**角色形象需修改**) |
 | READY | 就绪 | ASSET_PREP完成、素材齐全、**角色形象已获用户确认（路径二）** | 用户确认分镜和脚本标注文档后进入生成（固定的生成前确认门，非临时暂停；注：审核文档是生成后ASR版产物，不在此门确认，READY 确认的是脚本标注文档=警示语确认版）；**READY 确认清单：①分镜表 ②合规报告 ③预估时长 ④角色参考图（路径二，含外貌/年龄/服装确认） ⑤脚本标注文档（成片）** | -> WAITING_USER(需确认) |
 | GENERATING | 生成中 | 用户确认 | 所有镜头视频文件就绪 | -> REPAIRING(单镜头失败) |
-| VERIFYING | 校验中 | 视频文件就绪 | 前贴:ASR+发音Diff通过 / 成片:ASR+发音Diff+警示语全部通过 | -> REPAIRING(发音错误) |
-| DELIVERING | 交付中 | 校验通过 | 产物组装+质检完成 | -> WAITING_USER(质检异常) |
+| VERIFYING | 校验中 | 视频文件就绪 | 前贴:ASR+发音Diff完成 / 成片:ASR+发音Diff+警示语匹配完成（**只检测、出报告,不修复**） | -> CORRECTING(检出任何差异) / -> DELIVERING(零差异直通) |
+| CORRECTING | 纠正中 | VERIFYING检出差异 | 自动纠正能修的(replace→TTS克隆/insert·delete→重做镜头)+复检通过;修不了的报用户 | -> VERIFYING(纠正后复检) / -> WAITING_USER(超修复上限/需用户决策) |
+| DELIVERING | 交付中 | 校验通过(VERIFYING零差异 或 CORRECTING纠正后复检零差异) | 产物组装+质检完成 | -> WAITING_USER(质检异常) |
 | DONE | 完成 | 交付产物归档 | (终态) | (无) |
 
 > **⛔ STORYBOARD 是必经状态，禁止跳过（出片路径：前贴/成片）。** 直接从口播文本套模板生成数据文件（不做场景推断/景别设计/运镜规划）会导致画面千篇一律。必须走 wf_storyboard.md 1a-1e 全流程。**例外：纯脚本出口（SCRIPT_ONLY，仅交付口播脚本、不出片）在三层合规+原子化+用户确认齐全后合法早退，不经 STORYBOARD 及之后。**
@@ -42,14 +43,22 @@ GENERATING 内部按镜头序列拆分为独立子状态,支持并行执行:
 - 所有 SHOT_i 完成 -> SHOT_MERGE
 - SHOT_MERGE 完成 -> 退出 GENERATING,进入 VERIFYING
 
-## 3. 分支状态（REPAIRING）
+## 3. 分支状态（REPAIRING / CORRECTING）
+
+### REPAIRING（生成阶段修复,仅 GENERATING 内部使用）
 
 | 来源状态 | 修复动作 | 修复完成后 |
 |----------|----------|------------|
 | GENERATING/SHOT_i | 换模型/降分辨率/缩短时长后重新生成 | 回到 SHOT_i |
-| VERIFYING(replace) | TTS克隆重读+ffmpeg替换(AUDIO_REPAIR) | 回到 VERIFYING 重新ASR |
-| VERIFYING(insert/delete) | 重做镜头(VIDEO_REDO)→重新SHOT_MERGE | 回到 VERIFYING 重新ASR |
-| DELIVERING | (一般不进入修复,质检异常走WAITING_USER) | - |
+
+### CORRECTING（校验后纠正,VERIFYING 检出差异后进入）
+
+| 差异类型 | 纠正动作 | 纠正完成后 |
+|----------|----------|------------|
+| replace(念错词) | TTS克隆重读+ffmpeg音频替换(AUDIO_REPAIR),详见 `wf_correction.md` | 回到 VERIFYING 局部复检 |
+| insert/delete(漏念/多念) | 重做镜头(VIDEO_REDO)→重新SHOT_MERGE,详见 `wf_correction.md` | 回到 VERIFYING 复检 |
+| E007(警示语缺失) | 调时间轴重挂,详见 `wf_correction.md` | 回到 VERIFYING 复检 WARN_MATCH |
+| 超修复上限/需用户决策 | 进 WAITING_USER | 用户决定后回 CORRECTING 或终止 |
 
 ### 修复约束
 - 重试上限3次（具体任务可能更少，如ASR/拼接/归档为2次、音色锚定接口重试3次见E012，以 error_handler.md 和 task_registry.md 为准），超过上限则升级为 FATAL 异常。replace 发音错误的完整升级链：`AUDIO_REPAIR×3 → VIDEO_REDO×2 → 换脚本表达(用户确认) → FATAL`
@@ -62,7 +71,8 @@ GENERATING 内部按镜头序列拆分为独立子状态,支持并行执行:
 | 来源状态 | 暂停原因 | 用户响应后 |
 |----------|----------|------------|
 | INPUT_PARSE | 输入信息不足以判定路由 | 补充信息后回到 INPUT_PARSE |
-| READY | 需用户确认分镜/脚本标注文档（对齐 task_registry.md:READY_CONFIRM=分镜+脚本标注+合规报告） | 确认后进入 GENERATING,修改后回到 READY 重新校验 |
+| READY | 需用户确认分镜/脚本标注文档（对齐 task_registry.md:READY_CONFIRM=分镜+脚本标注+合规报告+角色参考图） | 确认后进入 GENERATING,修改后回到 READY 重新校验 |
+| CORRECTING | 超修复上限(AUDIO_REPAIR×3 / VIDEO_REDO×2)或需用户决策(换表达/接受当前) | 用户决定后回 CORRECTING 继续或终止 |
 | DELIVERING | 质检发现异常,需用户决策 | 用户确认后继续/用户修改后回退 |
 | 任意状态 | FATAL异常 | 用户决定终止或调整参数后重试 |
 
@@ -73,11 +83,11 @@ GENERATING 内部按镜头序列拆分为独立子状态,支持并行执行:
 
 ## 5. 状态转移图
 
-INPUT_PARSE -> CREATIVE_DESIGN -> PLANNING -> STORYBOARD -> ASSET_PREP -> READY -> GENERATING -> VERIFYING -> DELIVERING -> DONE
+INPUT_PARSE -> CREATIVE_DESIGN -> PLANNING -> STORYBOARD -> ASSET_PREP -> READY -> GENERATING -> VERIFYING -> CORRECTING -> DELIVERING -> DONE
 
-路径A(完整脚本): INPUT_PARSE -> PLANNING -> STORYBOARD -> ASSET_PREP -> READY -> GENERATING -> ...（跳过CREATIVE_DESIGN）
-路径B(Brief):   INPUT_PARSE -> CREATIVE_DESIGN -> PLANNING -> STORYBOARD -> ASSET_PREP -> READY -> GENERATING -> ...
-路径C(混合):    INPUT_PARSE -> PLANNING -> STORYBOARD -> ASSET_PREP -> READY -> GENERATING -> ...（片段+需求合并后按路径A处理，跳过CREATIVE_DESIGN）
+路径A(完整脚本): INPUT_PARSE -> PLANNING -> STORYBOARD -> ASSET_PREP -> READY -> GENERATING -> VERIFYING -> (CORRECTING) -> DELIVERING -> DONE（跳过CREATIVE_DESIGN;VERIFYING零差异直通DELIVERING跳过CORRECTING）
+路径B(Brief):   INPUT_PARSE -> CREATIVE_DESIGN -> PLANNING -> STORYBOARD -> ASSET_PREP -> READY -> GENERATING -> VERIFYING -> (CORRECTING) -> DELIVERING -> DONE
+路径C(混合):    INPUT_PARSE -> PLANNING -> STORYBOARD -> ASSET_PREP -> READY -> GENERATING -> VERIFYING -> (CORRECTING) -> DELIVERING -> DONE
 
 > ASSET_PREP 说明：分镜确认后、READY 前，按需准备素材（默认 reuse/skip，不是每条都生）：
 > - 缺角色/场景/首帧图且用户未提供 → Seedream 生图（`knowledge/video_parameters/image_generation.md`）
@@ -91,6 +101,11 @@ GENERATING 内部子状态:
               v                    |
            REPAIRING --------------+
 
+VERIFYING -> CORRECTING 循环:
+  VERIFYING(检出差异) -> CORRECTING(自动纠正) -> VERIFYING(复检)
+  VERIFYING(零差异) -> DELIVERING(直通)
+  CORRECTING(超上限) -> WAITING_USER
+
 任意状态 -> WAITING_USER -> 回到来源状态
-任意状态 -> REPAIRING -> 回到来源状态(VERIFYING/GENERATING)
+任意状态 -> REPAIRING -> 回到来源状态(GENERATING内部)
 DONE/交付后 -> EDIT -> 按修改类型回退对应阶段（音频级/字幕级→就地修改后回 VERIFYING；镜头级→GENERATING 单镜头重做(VIDEO_REDO)；台词级→STORYBOARD；脚本级→INPUT_PARSE 按路径A/B重走）；EDIT 的定位/KEEP-CHANGE/版本(_v2)语义见 wf_edit.md，产物从磁盘(_task_ids.jsonl/交付目录)定位

@@ -81,7 +81,7 @@ match相同 / replace同位置不同 / insert原子有ASR无(漏念) / delete AS
 ## 第8章：Step6 差异分类与分流
 | 类型 | 定义 | 去向 | 严重度 |
 |------|------|------|--------|
-| replace | 同位置文字不同=发音错 | wf_repair（TTS克隆音频替换 AUDIO_REPAIR） | 中 |
+| replace | 同位置文字不同=发音错 | wf_correction（TTS克隆音频替换 AUDIO_REPAIR） | 中 |
 | insert | 漏念 | 1-2字先AUDIO_REPAIR；3-5字/整句>5字 VIDEO_REDO | 高 |
 | delete | 多念 | 1-2字先音频切割；整句>5字必须VIDEO_REDO | 高 |
 

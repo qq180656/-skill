@@ -41,7 +41,7 @@ HTTP 状态恒为 200，成败看响应体 `code`（0=成功）。
   - `0` MEGA旧效果（不推荐）
 - `extra_params`（JSON字符串）：`enable_audio_denoise` 降噪（样本噪声大时开）
 
-训练样本要求（参考音频质量，也是 wf_repair 选段标准）：
+训练样本要求（参考音频质量，也是 wf_correction 选段标准）：
 - 单人、干声、SNR≥15dB，无BGM/无他人串音
 - 时长按官方要求（通常10s-数分钟清晰语料）；可从成片中提取同说话人无错段
 - 样本只承担音色，不含要规避的错误念法
@@ -64,7 +64,7 @@ HTTP 状态恒为 200，成败看响应体 `code`（0=成功）。
 
 ## 四、典型用法与流程接线
 
-1. **发音错误修不掉**（wf_repair 的 AUDIO_REPAIR 升级路径）：取同说话人清晰段→upload训练S_→tts合成正确句→ffmpeg交叉淡入替换（拼接点±10ms crossfade、响度对齐±1 LUFS、采样率/声道一致）
+1. **发音错误修不掉**（wf_correction 的 AUDIO_REPAIR 升级路径）：取同说话人清晰段→upload训练S_→tts合成正确句→ffmpeg交叉淡入替换（拼接点±10ms crossfade、响度对齐±1 LUFS、采样率/声道一致）
 2. **整片后期配音**：为每个角色训练S_音色→按 atomic_scripts 分段tts→合成音轨与画面对齐（注意口型，重配音适合旁白/画外音，正脸特写对白重生视频更自然）
 3. **方言资产化**：model_type=3 上传方言母语者样本，得到稳定方言S_，比在视频prompt里描述"四川口音"更可控；同一campaign跨条复用
 4. 训练好的 `voice_{role}.mp3` / speaker_id 登记到 `_session/`，AUDIO_ANCHOR 阶段复用，全项目不漂移
@@ -78,4 +78,4 @@ HTTP 状态恒为 200，成败看响应体 `code`（0=成功）。
 | 成本/周期 | 零额外步骤 | 需训练+合成+混音 |
 | 适用 | 剧情对白/口播（默认） | 反复修不好、后期旁白、方言/真人锁定 |
 
-默认走视频内发声；仅当 wf_repair AUDIO_REPAIR×3 失败、或明确需要音色资产时才升级到本链路。
+默认走视频内发声；仅当 wf_correction AUDIO_REPAIR×3 失败、或明确需要音色资产时才升级到本链路。
