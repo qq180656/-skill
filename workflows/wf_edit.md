@@ -136,11 +136,7 @@ ffmpeg -hide_banner -loglevel error -y -ss 8 -i input.mp4 -c copy assets/post.mp
 - 遵循 KEEP/CHANGE 协议：明确哪些镜头保留（KEEP），哪些重做（CHANGE）
 - 仅对 CHANGE 标记的镜头重新调用视频生成
 - KEEP 的镜头直接复用原视频文件
-- **KEEP/CHANGE 接缝校验**（镜头级修改后必做）：在相邻 KEEP/CHANGE 镜头的转场处逐项校验
-  - 角色外貌一致：脸型 / 服装 / 发型 无跳变
-  - 光影连续：不得由暖色突变冷色（或曝光/白平衡断层）
-  - 空间关系一致：人物站位 / 朝向 / 相对位置连贯
-  - 不一致的处理：给 CHANGE 镜头的 Prompt 加**对 KEEP 镜头的参考约束**（把 KEEP 末帧作参考图传入），或对 KEEP 镜头做轻微调色以统一影调
+- **KEEP/CHANGE 接缝校验**（镜头级修改后必做）：在相邻 KEEP/CHANGE 镜头转场处，按 `knowledge/templates/visual_anchor_spec.md` 的 **7 维度比对清单 + GREEN/YELLOW/RED 分级**逐项校验并出 `seam_check` JSON 报告；不达标按该文件的**补偿策略矩阵**处理（CHANGE 镜头加 KEEP 末帧参考约束 / ffmpeg 色彩校准脚本 / KEEP 轻微调色统一影调）
 - 重新做 SHOT_MERGE 拼接
 - 重新跑 VERIFYING 全流程
 
