@@ -28,8 +28,10 @@
 
 | 产物 | 格式 | 路径 | 说明 |
 |------|------|------|------|
-| 单镜头视频 | MP4 | {project}/shot_NN.mp4 | VIDEO_GEN输出（中间产物；shot_NN 为生成期内部编号，与最终交付 {序号}_{名称}.mp4 的映射记录在 _task_ids.jsonl 的 metadata） |
-| 合并视频 | MP4 | {project}/merged.mp4 | SHOT_MERGE输出 |
+| 分段素材视频 | MP4 | {project}/{YYYY-MM-DD}/素材/{序号}_{名称}_seg{NN}.mp4 | VIDEO_GEN输出（中间产物,分段裸视频;seg01=首段,seg02=extend第2段…;单段模式无seg后缀直接进成片/） |
+| 分段末帧截图 | PNG | {project}/{YYYY-MM-DD}/素材/{序号}_{名称}_seg{NN}_endframe.png | extend承接用,拼接完成前不删 |
+| 拼接成片(无字幕) | MP4 | {project}/{YYYY-MM-DD}/成片/{序号}_{名称}.mp4 | SHOT_MERGE输出(多段拼接后;单段直出也存这里) |
+| 成片(带字幕) | MP4 | {project}/{YYYY-MM-DD}/成片_带字幕/{序号}_{名称}.mp4 | 烧入口播字幕后的投放版 |
 | 音色样本 | MP3 | {project}/_session/voice_{role}.mp3 | AUDIO_ANCHOR输出（多角色=多文件，每角色一个；命名与 wf_generation Step3/task_registry 统一，不用 voice_anchor.mp3 单数） |
 
 ## 5. VERIFYING 阶段产物
