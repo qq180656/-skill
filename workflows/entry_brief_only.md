@@ -86,5 +86,9 @@
   3. 预估时长（字数÷语速，标注是否在目标范围内；前贴标注字数是否超上限）
 - **多条脚本一致性校验**：同一 campaign 多条须视觉调性关键词一致、角色设定一致（不换人）、叙事结构同构（前贴统一对话引入、不混用旁白）；不一致则对齐 creative_design.md
 - 用户确认后进入 `wf_storyboard.md`（路径B模式）
-- 后续还有两次确认节点：分镜确认（STORYBOARD 出口）、生成前最终确认（READY 出口）
 - 用户要求修改脚本 → 回到 Step 3 重新撰写
+
+### Step 6: 分镜规划 → 生成前最终确认（STORYBOARD → READY）
+- ⛔ 进入 `wf_storyboard.md` 做分镜（**出片路径不可跳过**），分镜产出后经**用户确认**（分镜确认门）
+- ⛔ 通过 **READY 生成前最终确认门**（确认分镜 + 脚本标注文档）后，才进入 GENERATING
+- 之后按公共链路 GENERATING → VERIFYING → DELIVERING → DONE（状态序列以 `core/state_machine.md` §5 为权威）
