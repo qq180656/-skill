@@ -53,7 +53,8 @@ GENERATING 内部按镜头序列拆分为独立子状态,支持并行执行:
 
 ### 修复约束
 - 重试上限3次（具体任务可能更少，如ASR/拼接/归档为2次、音色锚定接口重试3次见E012，以 error_handler.md 和 task_registry.md 为准），超过上限则升级为 FATAL 异常。replace 发音错误的完整升级链：`AUDIO_REPAIR×3 → VIDEO_REDO×2 → 换脚本表达(用户确认) → FATAL`
-- 每次重试记录日志(尝试次数/策略/结果)，并写入 `snapshot.json` 的 `retry_counters`；**计数跨断点恢复持久保留，不清零**（防止恢复后绕过上限造成无限重试）。**复合键计数结构**（`shot_id → error_position → error_type → strategy`）、升级链计数细则与旧扁平结构迁移逻辑见 `core/retry_counters_spec.md`
+- 每次重试记录日志(尝试次数/策略/结果)，并写入 `snapshot.json` 的 `retry_counters`；**计数跨断点恢复持久保留，不清零**（防止恢复后绕过上限造成无限重试）
+- **retry_counters 采用复合键结构**（shot_id → error_position → error_type → strategy → 累计次数），升级链判定按位置+类型精确触发，结构定义与升级逻辑详见 `core/retry_counters_spec.md`
 - 修复仅针对失败的具体镜头/片段,不全局回退
 
 ## 4. 暂停状态（WAITING_USER）

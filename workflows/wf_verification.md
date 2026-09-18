@@ -5,6 +5,13 @@
 - 原子脚本列表（`atomic_scripts.json`，其 text = 期望朗读文本 expected_readback_text）已就绪 —— **这是发音 DIFF 的唯一基准**
 - 原始脚本和警示语列表已就绪 —— **仅用于 WARN_MATCH 提取警示语**，不用于发音 DIFF
 
+## 依赖知识库
+- `knowledge/templates/shot_logic_review.md` — 镜头逻辑自审（场景状态表+镜头间连续性自审+保险视频特化检查项，镜头重做后全量校验时复核镜头逻辑）
+- `knowledge/tts_optimization/pronunciation_rules.md` — TTS规避词表（同音异形判定+数字读法规则）
+- `knowledge/video_parameters/config_matrix.md` — 字幕断句与字数规范
+- `knowledge/video_parameters/asr_processing.md` — ASR处理规范（词级时间戳导出/逐字稿生成）
+- `knowledge/video_parameters/subtitle_burnin.md` — 硬字幕烧录规范（SRT转ASS+烧录参数+校验）
+
 ## 执行步骤
 
 ### Step 1: ASR识别 (ASR_TRANS)
@@ -79,5 +86,6 @@
 - **自动通过**：DIFF无任何差异 → 标"自动通过"，仅展示摘要（序号+无发音错误+无警示语问题），不必逐条人审
 - **低风险**：仅replace类差异且置信度>0.8 → 可批量确认
 - **高风险（逐条强制人审）**：有insert/delete 或 E007
+- **镜头逻辑复核**（镜头重做后全量校验时执行）：参考 `shot_logic_review.md` 的场景状态表和保险视频特化检查项，复核镜头重做后与相邻镜头的连续性（角色位置/银幕侧/朝向/道具状态/环境锚点等），确保重做镜头未引入接缝冲突
 - 审核文档按风险等级排序（高风险在前）
 - 确认通过 生成最终SRT；确认有误 修正后重新生成

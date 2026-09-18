@@ -23,12 +23,12 @@
 | `narrative_archetypes.md` | 保险叙事原型库（产品5种角色+四大险种叙事原型+七拍/十拍节拍表+Logline公式+人物弧光+可证伪测试） | wf_creative_design（创意选型/剧本结构） |
 | `visual_style_system.md` | 视觉风格系统（风格配方速选+色彩命题+60:30:10配色+四大险种12色方案+五子层光影量化+风格签名串） | wf_creative_design / wf_storyboard（视觉设计/光影配色） |
 | `director_shot_toolkit.md` | 导演镜头技法库（6种核心技法+构图关系压力+对方存在证据+动作闭环四拍+多镜切镜+运镜转场词库） | wf_storyboard（镜头设计/分镜规划） |
-| `prompt_patterns.md` | 常见场景 Prompt 模式库（一致性控制/口播直述/对话剧情/旁白穿插/产品讲解/视频延长/首帧锁定） | wf_storyboard / wf_generation（Prompt 构造） |
-| `shot_logic_review.md` | 镜头逻辑自审（场景状态表12项+镜头冲突拦截13项+保险场景特化检查） | wf_storyboard（分镜产出后自审） |
-| `insurance_video_genres.md` | 保险视频子品类体裁模板（产品讲解型/生活场景剧情型/前贴引子型 三大类创意指引+分镜模版） | wf_creative_design（体裁选型） |
-| `multi_character_layout_spec.md` | 多角色布局控制（空间占位锚定法/角色融合拦截/布局属性字段/策略A·B） | wf_storyboard / wf_generation（多角色镜头布局稳定，被 character_lock_protocol 引用） |
-| `visual_anchor_spec.md` | 视觉锚点描述集（KEEP/CHANGE 接缝校验：7维度比对+GREEN/YELLOW/RED分级+补偿策略矩阵+seam_check报告） | wf_edit / wf_repair（镜头级修改接缝校验） |
-| `multi_scene_director/SKILL.md` | 多人场景执行引导（街采/双人/群戏模板+6条强制规则+人物关系校验门拦） | wf_storyboard（2+说话角色强制加载，防多人拆成单人独白） |
+| `multi_character_layout_spec.md` | 多角色布局控制方案（空间占位符+角色/场景解耦引用，解决多角色镜头中角色融合/变脸问题） | wf_storyboard / wf_generation（多角色镜头布局） |
+| `visual_anchor_spec.md` | 视觉锚点描述集（接缝校验执行层：生成前锚点描述注入→生成后描述级比对→不一致时补偿策略矩阵） | wf_edit（KEEP/CHANGE 接缝校验） |
+| `prompt_patterns.md` | 常见场景 Prompt 模式库（保险视频常见场景的可套用 Prompt 骨架，prompt_craft_guide.md 配套示例册） | wf_storyboard / wf_generation（Prompt 构造参考） |
+| `shot_logic_review.md` | 镜头逻辑自审（场景状态表+单段/多段镜头间连续性自审，检查角色位置/银幕侧/朝向/注视轴/对峙互视轴） | wf_storyboard / wf_verification（镜头逻辑校验） |
+| `insurance_video_genres.md` | 保险视频子品类创意体裁模板（产品讲解型/场景叙事型/专家背书型三大子品类的创意设计指引和分镜模板） | wf_creative_design（子品类创意选型） |
+| `multi_scene_director/` | 多人场景执行引导技能（2+说话角色时强制走多人规范，含街采/对话/群戏场景模板、多人Prompt骨架、人物关系校验门拦） | wf_storyboard / wf_generation（多人场景分镜与生成） |
 
 > ⚠️ 下方 `script_template` / `asr_report_template` / `user_notify_template` 为**内联输出模板**（本文件内嵌，非独立 .md 文件），分别供 SCRIPT_PARSE 结构化输出 / VERIFYING 校验报告 / 用户交互通知 使用。
 

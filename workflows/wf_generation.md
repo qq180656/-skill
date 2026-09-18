@@ -6,6 +6,18 @@
 - 分镜（storyboard.md）已获用户确认
 - READY 状态生成前最终确认已通过
 
+## 依赖知识库
+- `knowledge/templates/prompt_craft_guide.md` — Prompt编写指南（四层分层结构+运镜+起幅落幅+音频符号+失败兜底）
+- `knowledge/templates/prompt_patterns.md` — 常见场景 Prompt 模式库（单镜头重做时按场景类型选择对应Prompt骨架）
+- `knowledge/templates/character_lock_protocol.md` — 角色锁定协议（参考图逐镜头重复传参+音色锚定逐镜头传参）
+- `knowledge/templates/character_asset_pipeline.md` — 角色资产产线（S1验脸→S2面部四视图→S3全身四视图逐级传递出图+自检）
+- `knowledge/templates/multi_character_layout_spec.md` — 多角色布局控制方案（多角色镜头ImageList排列+方位词约束+融合修复）
+- `knowledge/templates/multi_scene_director/` — 多人场景执行引导技能（多人Prompt骨架+ImageList排列规范+约束写法）
+- `knowledge/templates/batch_fission_playbook.md` — 批量裂变操作手册（共享镜头校验+批量并发生成+按版本交付）
+- `knowledge/video_parameters/segmentation_packaging.md` — 句子流分段打包（时长/停顿/场景对齐）
+- `outputs/intermediate_artifacts.md` — 中间产物路径（音色样本/末帧截图/快照）
+- `core/platform_adapter.md` — 平台适配（积分管理+render_video合成规范）
+
 ## 执行步骤
 
 ### Step 1: 时长预算
@@ -24,11 +36,15 @@
 
 ### Step 2: Prompt构造
 - **台词来源（硬约束）**：第3层"台词"必须逐字取自 `atomic_scripts.json` 对应原子（已完成去括号/删除级词删除/空格注入/"（2026版）"省略），**禁止从原始脚本重组或改写**，否则原子化成果在喂模型前丢失（复现产品名连读、"2026版"被念出等）。分镜阶段 `wf_storyboard.md` 已构造的镜头 Prompt 应直接复用，不重复另造。
-- 遵循四层分层结构:
-  1. 素材与音色绑定层
+- 遵循四层分层结构（完整规范见 `prompt_craft_guide.md`）:
+  1. 素材与音色绑定层 — 按 `character_lock_protocol.md` 配置 ImageList：**每个镜头/每段都重复传入**该镜出场角色参考图（工具无状态，不能只在首镜传一次）；有音色锚定的角色同时通过 AudioList 传入 voice mp3
   2. 全局概述层（一句话）
   3. 画面阶段描述层（含时间锚点/台词/动作/音效）
   4. 通用约束层（画质/防水印/无字幕/时长比例）
+- **多角色镜头 ImageList 排列**：当镜头包含2个及以上角色同框时，按 `multi_character_layout_spec.md` 的角色解耦引用法排列 ImageList（[角色A_Sheet, 角色B_Sheet, 场景参考图]），Prompt 中用方位词（左侧/右侧/前景/背景）显式绑定各角色位置
+- **多人场景 Prompt 骨架**：当镜头为多人对话/街采/群戏场景时，参照 `multi_scene_director/` 的场景模板 Prompt 骨架（含素材绑定格式+画面阶段描述+180度轴线约束+道具归属写法），确保生成参数与分镜阶段设计一致
+- **角色资产生成**（分镜标注缺失参考图时）：若分镜 Step 1d 标注的参考图尚未生成，按 `character_asset_pipeline.md` 的 S1验脸→S2面部四视图→S3全身四视图流程逐级出图，每步出完等用户确认后再走下一步；用户已上传角色照片时直接用作参考图，不再生成四视图
+- **单镜头重做时 Prompt 微调**：VIDEO_REDO 模式下微调 Prompt 时，参照 `prompt_patterns.md` 选择对应场景类型的 Prompt 骨架模板，确保重做后的 Prompt 结构完整且台词逐字不变
 
 ### Step 3: 音色锚定 (AUDIO_ANCHOR) — 条件触发
 - **触发判定（按优先级从上到下，命中即定，消除"多角色前贴"歧义）**：
@@ -56,6 +72,7 @@
 - 多段extend模式(>60s): 按30s分段，首段 text_to_video，后续各段以上一段末帧为参考做 reference2video，最后统一 ffmpeg 拼接
 - 积分管理: 生成前调用 `check_credit_quote` 确认积分余额充足；积分不足时暂停（E014）并通知用户充值，保留快照可续跑。详见 `core/platform_adapter.md` §二
 - 并发调度: 视频生成并发4，采用动态调度（完成一个立即启动下一个），不按固定批次等待；TTS克隆串行
+- **批量裂变场景**：多版本并发生成时，参考 `batch_fission_playbook.md` 的共享镜头校验规则（共享镜头只生成一次，各版本复用同一文件）和批量并发调度策略（按版本矩阵组织任务队列，共享镜头优先生成）
 - **失败重试的并发占用**：
   - 重试**占用原任务槽位，不新增并发**；实际在跑任务数始终 ≤ 4
   - 原任务在 `snapshot.json` 标记 `FAILED_RETRIES` 并释放槽位，重试作为**新任务排队**（继承原镜头/分段标识与 `retry_counters` 计数）

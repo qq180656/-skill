@@ -5,24 +5,33 @@
 
 ## 依赖知识库
 - `knowledge/templates/creative_design_template.md` — 创意文档模板
-- `knowledge/templates/style_reference.md` — 风格速查表（选定风格关键词）
+- `knowledge/templates/insurance_video_genres.md` — 保险视频子品类创意体裁模板（产品讲解型/场景剧情型/前贴引子型/旁白叙事型，含子品类选择决策树）
 - `knowledge/templates/narrative_arc.md` — 故事弧线与节奏模板
+- `knowledge/templates/narrative_archetypes.md` — 保险叙事原型库（产品参与叙事的五种角色+四大险种叙事原型+节拍表+Logline公式+人物弧光）
+- `knowledge/templates/cinematic_narrative_tools.md` — 电影化叙事工具箱（命题先行写法+道具状态链+信息目标驱动+因果连续+蒙太奇连接+色调对比叙事）
 - `knowledge/templates/opening_hooks_library.md` — 开场方式库（40+种开场方式完整说明）
+- `knowledge/templates/reference_video_analysis.md` — 参考视频拆解案例库（10条优质保险视频逐帧拆解，含通用四段式叙事结构+6种Hook模式+场景选择指南+角色配置模式+5层信息递进+9套创作模板）
+- `knowledge/templates/style_reference.md` — 风格速查表（选定风格关键词）
+- `knowledge/templates/visual_style_system.md` — 视觉风格系统（风格配方速选+60:30:10配色+四大险种12色方案+五子层光影量化+风格签名串）
 - `knowledge/templates/broll_skills/` — 场景空镜 skill（开场/场景涉及地标·著名景点/医院/家庭日常/通用空镜时按需加载）
 - `knowledge/templates/character_lock_protocol.md` — 角色锁定协议（多角色时）
+- `knowledge/templates/character_asset_pipeline.md` — 角色资产产线（S1验脸→S2面部四视图→S3全身四视图逐级传递出图+自检）
+- `knowledge/templates/batch_fission_playbook.md` — 批量裂变操作手册（母版定版→版本矩阵→共享镜头→批量并发生成→按版本交付）
 - `knowledge/compliance/` — 三层合规规则（禁用词+产品约束）
 
 ## 执行步骤
 
 ### Step 1: 意图解析与上下文构建
 - 识别意图层: 题材 目的 面向人群
+- **子品类选型**（意图识别后首要动作）：参考 `insurance_video_genres.md` 的子品类选择决策树，判定本次视频属于哪个子品类（A产品讲解型/B生活场景剧情型/C前贴引子型/D旁白叙事型），后续叙事结构、角色配置、画面节奏均按所选子品类的创意设计要点展开
 - **意图分层提取规则**：
   - 题材 ← 从产品名映射（好医保·中老年 → 健康险/中老年医疗险；长钱保·五年领年金 → 年金险/储蓄型）
   - 目的 ← 从类型词（前贴 → 引流认知；成片 → 转化购买）
   - 面向人群 ← 产品名含受众词直接取（"中老年" → 45-65岁本人及子女）；不含受众词 → 标"待确认"，随 Step 3 一并询问
 - 检索知识库: 从 knowledge/compliance/ 检索相关产品合规要求（三层全读）
+- **检索案例库**: 参考 `reference_video_analysis.md` 按产品类型检索已验证的参考案例，获取对应的场景选择、角色配置模式、5层信息递进顺序和创作模板（案例仅供参照，创作时以实际推广产品为准）
 - 建立约束: 确定风格限制 禁用词 必加警示语
-- 参考 `narrative_arc.md` 确定叙事结构（起承转合/钩子类型）
+- **叙事原型选型**：参考 `narrative_archetypes.md` 确定保险产品在叙事中的角色类型（关键证物/破局工具/关系证物/身份线索/状态触发）和险种叙事原型，再参考 `narrative_arc.md` 确定具体叙事弧线（起承转合/钩子类型）
 - **叙事结构时长匹配**：
   - 15-20s 前贴 → 钩子型：3s 引入 + 8s 铺垫 + 4s 产品名 + 2s 收尾
   - 30s 成片 → 起承型：5s 痛点 + 12s 利益点 + 8s 信任 + 5s CTA
@@ -48,12 +57,13 @@
 
 ### Step 2: 创意方案撰写
 - 使用 `creative_design_template.md` 模板进行撰写
+- **命题先行**（参考 `cinematic_narrative_tools.md`）：撰写核心主题前先写一句核心命题——"谁处于何种关系/处境，因什么发生何种变化，最终留下什么情绪或认知"。命题是故事内核而非产品卖点描述，产品信息服务于命题。命题确定后每个镜头必须能回答"在证明命题的哪个部分"
 - 核心要素:
-  1. 核心主题 Theme
-  2. 视觉调性 Visual Style（从风格速查表选取，记录完整关键词）
-  3. 叙事结构 Narrative Arc（从弧线模板选取，匹配时长）
-  4. 开场方式 Opening Hook（从开场方式库选取，记录方式名称+适用理由）
-  5. 角色设定 Character Setting（多角色时遵循角色锁定协议）
+  1. 核心主题 Theme（从命题推导）
+  2. 视觉调性 Visual Style（从 `style_reference.md` 选取风格关键词，同时参考 `visual_style_system.md` 的风格配方速选表确定主语言+辅助语言+成像基底，按60:30:10配色体系指定色彩方案，按五子层光影量化体系指定光影参数，输出风格签名串）
+  3. 叙事结构 Narrative Arc（从 `narrative_arc.md` 弧线模板选取，匹配时长；结合 `narrative_archetypes.md` 险种叙事原型和 `cinematic_narrative_tools.md` 的道具状态链/信息目标驱动/因果连续等叙事工具增强深度）
+  4. 开场方式 Opening Hook（从 `opening_hooks_library.md` 选取，记录方式名称+适用理由；可参考 `reference_video_analysis.md` 中对应Hook模式的实证案例）
+  5. 角色设定 Character Setting（多角色时遵循 `character_lock_protocol.md`；在创意文档中标注角色资产生成要求，参考 `character_asset_pipeline.md` 的S1验脸→S2面部四视图→S3全身四视图流程，明确每个角色的出图优先级和风格锚点要求）
   6. 合规约束（从三层规则提取禁用词+必加项）
 - **角色数量上限**：
   - 15-20s 前贴 ≤ 2 角色；30s 成片 ≤ 3 角色；60s 成片 ≤ 4 角色
@@ -80,6 +90,7 @@
 
 ## 多脚本共用创意
 一次创意出 N 条脚本（N≥2）时：
+- 参考 `batch_fission_playbook.md` 的批量裂变操作手册，按"母版定版→版本矩阵→共享镜头"流程规划多版本
 - 共用不变项：核心主题 / 视觉调性 / 合规约束（禁用词 + 必加警示语）
 - 叙事结构：可用同一弧线，各条写不同变体（A/B/C，换开场钩子或场景载体）
 - 开场方式：各条可选用不同开场方式做A/B测试（如条1用大特写直入、条2用场景代入、条3用问答互动），对比完播率

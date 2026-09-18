@@ -14,9 +14,14 @@
 ## 依赖知识库
 - `knowledge/templates/storyboard_template.md` — 分镜表格式模板
 - `knowledge/templates/prompt_craft_guide.md` — Prompt编写指南（分层结构+运镜+起幅落幅+音频符号+失败兜底）
+- `knowledge/templates/prompt_patterns.md` — 常见场景 Prompt 模式库（保险视频常见场景的可套用 Prompt 骨架，prompt_craft_guide.md 配套示例册）
 - `knowledge/templates/character_lock_protocol.md` — 角色锁定协议（参考图逐镜头重复传参）
+- `knowledge/templates/multi_character_layout_spec.md` — 多角色布局控制方案（空间占位符+角色/场景解耦引用，解决多角色镜头中角色融合/变脸问题）
+- `knowledge/templates/director_shot_toolkit.md` — 导演镜头技法库（6种核心技法+构图关系压力+对方存在证据+动作闭环四拍+多镜切镜+运镜转场词库）
 - `knowledge/templates/narrative_arc.md` — 故事弧线
 - `knowledge/templates/style_reference.md` — 风格速查表
+- `knowledge/templates/shot_logic_review.md` — 镜头逻辑自审（场景状态表+镜头间连续性自审+保险视频特化检查项）
+- `knowledge/templates/multi_scene_director/` — 多人场景执行引导技能（2+说话角色时强制走多人规范，含街采/对话/群戏场景模板、多人Prompt骨架、人物关系校验门拦）
 - `knowledge/video_parameters/config_matrix.md` — 模型/语速/extend
 - `knowledge/video_parameters/segmentation_packaging.md` — 句子流分段打包（时长/停顿/场景对齐）
 - `knowledge/tts_optimization/pronunciation_rules.md` — TTS空格注入
@@ -58,6 +63,7 @@
   4. 无线索（纯口播/产品讲解）→ 中性室内场景，标注"场景为推断，建议用户确认"
 - **多场景冲突处理**：若脚本前后段指向不同场景（如前半在家、后半在医院），按语义边界切分为不同**场景组**，每组独立标注场景；跨场景镜头注明转场方式（硬切/淡入淡出/空镜过渡），并在分段时把场景边界对齐到段边界（见 segmentation_packaging）。
 - **场景 skill 加载**：识别到地标/著名景点、医院、家庭日常等场景时，加载 `knowledge/templates/broll_skills/` 下对应文件（landmark_scene/hospital_broll/family_daily_broll/broll_scene），按其写法构造空镜/场景 Prompt（如地标必须写可辨识视觉特征，不能只写名字）。
+- **多人场景检测**：如果脚本包含2个及以上有台词的角色，或场景描述含"采访""对话""交谈""群戏"等互动词，**必须加载 `knowledge/templates/multi_scene_director/`**，按其场景模板（街采/对话/群戏）和多人Prompt骨架构建分镜，禁止将多人场景降维拆解为独立单人口播。
 - 产出：镜头序列（镜头号/角色/场景/画面/台词）
 
 #### 1b：时长估算与分段策略
@@ -70,12 +76,15 @@
 
 #### 1c：画面模式判定与 Prompt 构造
 - 口播模式（对镜说话）→ 口播规范；对话模式（多人互动）→ 对话规范+正反打+景别切换节奏；旁白穿插 → prompt_craft_guide「旁白型画面分镜规则」
+- **镜头技法选型**：参考 `director_shot_toolkit.md` 选择适合当前剧情前提/情绪点的镜头技法（推镜/变焦/固定长镜/抽帧慢镜/手持/逆光剪影），每技法落笔前必答"服务哪个剧情前提/情绪点"，同技法全片最多1-2次
+- **Prompt 骨架套用**：参考 `prompt_patterns.md` 按当前场景类型（口播直述/对话剧情/旁白穿插/产品讲解/医院空镜/CTA）选择对应 Prompt 骨架模板，在此基础上填充具体角色/场景/台词内容
 - 每个镜头按分层结构构造完整、**自包含**的 Prompt（光影含时间锚点、运镜含起幅落幅、台词随镜头+@VOX锚定）
 - 产出：各镜头 Prompt
 
 #### 1d：角色锁定与素材绑定
 - **素材就绪前置门控**：配置 ImageList 前，检查所需参考图（角色面部/全身、场景图、道具图）是否已在项目目录存在；**缺失素材先生成，再进入 Prompt 构造**，不得带着缺失参考图往下走。
 - 按 character_lock_protocol 配置 ImageList：**每个镜头/每段都重复传入**该镜出场角色参考图（工具无状态，不能只在首镜传一次），prompt 每镜写明"参考@图片N的形象作为XX"
+- **多角色镜头布局**：当镜头包含2个及以上角色同框时，参考 `multi_character_layout_spec.md` 的布局控制策略（角色解耦引用法/空间占位锚定法），在 Prompt 中强制加入方位词（左侧/右侧/前景/背景），避免角色融合或变脸；如模型无法区分则改用"单人+背景"分镜规避策略
 - 产出：每镜头 ImageList 绑定表
 
 #### 1e：TTS 空格注入与台词校对
@@ -100,6 +109,21 @@
 - 景别切换节奏（避免连续同景别同角色）
 
 **Prompt 字数自检**：逐个镜头核对字数区间——纯动作/空镜120-200字、单人台词200-300字、多人对话300-400字；超400压缩重复约束，不足则补光影/运镜/景别。
+
+**镜头逻辑自审**（参考 `shot_logic_review.md`）：
+- 单段自审：每段 Prompt 构造完成后，按场景状态表（角色位置/银幕侧/朝向/注视轴/对峙互视轴/姿态/动作结果/手中道具/环境锚点/情绪状态/画面焦点/机位路径）逐项标注，检查阶段间是否有冲突
+- 多段自审：所有段构造完成后，按段顺序维护跨段状态表，检查段间衔接处是否有冲突（位置冲突/银幕方向冲突/朝向冲突/注视轴冲突/动作状态冲突/道具状态冲突/身体环境锚点冲突/情绪跳变冲突/镜头焦点冲突/机位路径冲突）
+- 保险特化自审：通用自审通过后额外检查医护形象合规/药品器械合规/警示语挂载点/场景推断标注/产品名出现时机/转场自然性
+- 冲突修复：发现冲突时优先在 Prompt 中补足走位/转身/道具交接描写；无法补足则调整分镜拆分
+
+**多人场景校验门拦**（当检测到2+说话角色时，参考 `multi_scene_director/` 第三层校验流程）：
+- 同框存在性：至少一个双人/多人同框镜头
+- 正反打覆盖：每个说话者的台词有对应口型镜头
+- 角色功能区分：不能所有角色用同一套"面对镜头独白"骨架
+- 道具归属一致：互动道具归属在所有镜头中一致
+- 轴线一致性：双人同框时角色面朝方向全场景一致
+- 空间关系三要素：双人同框镜头必须同时写明景别+相对大小+间隔物
+- 校验结果：PASS → 继续；FAIL → 阻断并列出问题项；WARN → 附加提示后继续
 
 ### Step 3：用户确认与修改分级
 - 展示 storyboard.md（场景为推断的单独提示确认）

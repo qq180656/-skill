@@ -7,6 +7,7 @@
 
 ## 依赖知识库
 - `knowledge/templates/quality_control.md` — 出片自检清单+KEEP/CHANGE修改协议
+- `knowledge/templates/batch_fission_playbook.md` — 批量裂变操作手册（多版本交付时的版本矩阵产物组装+共享镜头交付目录组织+按版本命名规范）
 - `outputs/delivery_standard.md` — 交付物清单+目录结构+命名规范
 
 ## 执行步骤
@@ -48,6 +49,7 @@
 
 - 注意: 字幕不烧入视频,作为独立SRT文件交付
 - _task_ids.jsonl 和 _视频日志.csv 每次追加写入，不按日期拆分
+- **批量裂变交付**：多版本裂变场景下，参考 `batch_fission_playbook.md` 的按版本交付规范——共享镜头产物只存一份（各版本复用同一文件路径），各版本独有镜头按版本矩阵命名归档，版本间差异项在 `_batch_log.txt` 中注明
 - **生成 `{YYYY-MM-DD}/原始脚本.csv`**（交付必须产物）：从本批 `parsed_script.json`/`atomic_scripts.json` 与原始脚本导出，字段 序号/标题/正文(含括号警示语)/类型/字数(去括号)；此产物由本步骤负责产出（此前无任何步骤生产，会导致 QC 失败）
 
 #### 前贴/成片产物分目录

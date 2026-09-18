@@ -47,4 +47,5 @@
 - 升级链：`AUDIO_REPAIR 累计3次仍未纠正 → 升级 VIDEO_REDO 重做该镜头（上限2次）→ 仍失败 → 换脚本表达（同义替换须用户确认后重跑合规校验，见 fallback_strategies.md）→ 仍失败 → FATAL 通知用户`。
 - **升级时间成本提示**（每次升级前展示，让用户决定继续或接受）：AUDIO_REPAIR约1-3分钟、VIDEO_REDO约5-15分钟(单镜头重生)、换表达+合规约15-30分钟。
 - **换表达操作流程**：定位错误词在 atomic_scripts.json 的原子 → 提供同义替换候选（参考 pronunciation_rules 删除级/空格级替换建议，如"超声"→"影像检查"）→ 展示候选给用户选（不自动替换，同义词可能改变合规触发关系）→ 用户确认后更新 atomic → 重新 COMPLIANCE_CHECK → 重构Prompt → VIDEO_REDO；新候选触发新警示语则补挂再确认。
-- 每次尝试写入 `_session/repair_log_{NN}.json`（attempt/strategy/result/**error_position**(如00:12.3-00:13.1)/**error_text**/**edit_reason**/before_snapshot/after_snapshot）；升级判定按 error_position 查同一位置累计尝试次数；NN全局递增、内部 error_position 支持按位置聚合；snapshot.json 的 retry_counters 以 error_position 为key累计（非按视频），**断点恢复后不清零**（否则会绕过上限造成无限重试）。完整复合键结构（`shot_id→error_position→error_type→strategy`）、旧结构迁移逻辑与 repair_log 同步规范见 `core/retry_counters_spec.md`。
+- 每次尝试写入 `_session/repair_log_{NN}.json`（attempt/strategy/result/**error_position**(如00:12.3-00:13.1)/**error_text**/**edit_reason**/before_snapshot/after_snapshot）；升级判定按 error_position 查同一位置累计尝试次数；NN全局递增、内部 error_position 支持按位置聚合；snapshot.json 的 retry_counters 以 error_position 为key累计（非按视频），**断点恢复后不清零**（否则会绕过上限造成无限重试）。
+- **升级判定逻辑**采用复合计数规则，具体实现详见 `core/retry_counters_spec.md` §3

@@ -52,7 +52,7 @@
 
 | 产物 | 格式 | 路径 | 说明 |
 |------|------|------|------|
-| 状态快照 | JSON | {project}/_session/snapshot.json | WAITING_USER前保存含状态ID/已完成镜头/中间产物路径/**retry_counters**（复合键计数,结构以 `core/retry_counters_spec.md` 为准:`shot_id→error_position→error_type→strategy`,跨断点持久不清零,防止恢复后绕过修复上限） |
+| 状态快照 | JSON | {project}/_session/snapshot.json | WAITING_USER前保存含状态ID/已完成镜头/中间产物路径/**retry_counters（复合键结构：shot_id→error_position→error_type→strategy→累计次数，跨断点持久不清零，防止恢复后绕过修复上限；结构定义详见 `core/retry_counters_spec.md`）** |
 
 ## 8. 恢复校验
 

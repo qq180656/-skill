@@ -5,6 +5,7 @@
 
 ## 依赖知识库
 - `knowledge/templates/quality_control.md` — KEEP/CHANGE 修改协议
+- `knowledge/templates/visual_anchor_spec.md` — 视觉锚点描述集（接缝校验执行层，替代模糊的"外貌/光影/空间一致"指令）
 - `outputs/intermediate_artifacts.md` — 中间产物路径（用于定位待修改文件）
 
 ## 修改类型判定
@@ -136,7 +137,10 @@ ffmpeg -hide_banner -loglevel error -y -ss 8 -i input.mp4 -c copy assets/post.mp
 - 遵循 KEEP/CHANGE 协议：明确哪些镜头保留（KEEP），哪些重做（CHANGE）
 - 仅对 CHANGE 标记的镜头重新调用视频生成
 - KEEP 的镜头直接复用原视频文件
-- **KEEP/CHANGE 接缝校验**（镜头级修改后必做）：在相邻 KEEP/CHANGE 镜头转场处，按 `knowledge/templates/visual_anchor_spec.md` 的 **7 维度比对清单 + GREEN/YELLOW/RED 分级**逐项校验并出 `seam_check` JSON 报告；不达标按该文件的**补偿策略矩阵**处理（CHANGE 镜头加 KEEP 末帧参考约束 / ffmpeg 色彩校准脚本 / KEEP 轻微调色统一影调）
+- **KEEP/CHANGE 接缝校验**（镜头级修改后必做）：在相邻 KEEP/CHANGE 镜头的转场处逐项校验
+  - 校验维度与执行流程详见 `knowledge/templates/visual_anchor_spec.md`（三步走：生成前锚点描述注入 → 生成后描述级比对 → 不一致时补偿策略矩阵）
+  - 核心原则：将 KEEP 末帧截图作为参考图传入 CHANGE 镜头的 ImageList，用结构化锚点描述替代"保持一致"类模糊指令
+  - 不一致时的处理：按 visual_anchor_spec.md §补偿策略矩阵执行（调整 Prompt 锚点段重做 / 对 KEEP 镜头轻微调色统一影调）
 - 重新做 SHOT_MERGE 拼接
 - 重新跑 VERIFYING 全流程
 
