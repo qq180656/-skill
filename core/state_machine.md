@@ -20,7 +20,8 @@
 | VERIFYING | 校验中 | 视频文件就绪 | 前贴:ASR+发音Diff完成 / 成片:ASR+发音Diff+警示语匹配完成（**只检测、出报告,不修复**） | -> CORRECTING(检出任何差异) / -> DELIVERING(零差异直通) |
 | CORRECTING | 纠正中 | VERIFYING检出差异 | 自动纠正能修的(replace→TTS克隆/insert·delete→重做镜头)+复检通过;修不了的报用户 | -> VERIFYING(纠正后复检) / -> WAITING_USER(超修复上限/需用户决策) |
 | DELIVERING | 交付中 | 校验通过(VERIFYING零差异 或 CORRECTING纠正后复检零差异) | 产物组装+质检完成 | -> WAITING_USER(质检异常) |
-| DONE | 完成 | 交付产物归档 | (终态) | (无) |
+| RETROSPECTIVE | 复盘 | 交付完成、用户确认收到产物 | 自我复盘本次会话全流程(发音/画面/合规/流程问题),产出复盘报告+skill优化建议,详见 `wf_retrospective.md` | -> DONE(复盘完成) |
+| DONE | 完成 | 复盘完成、产物归档 | (终态) | (无) |
 
 > **⛔ STORYBOARD 是必经状态，禁止跳过（出片路径：前贴/成片）。** 直接从口播文本套模板生成数据文件（不做场景推断/景别设计/运镜规划）会导致画面千篇一律。必须走 wf_storyboard.md 1a-1e 全流程。**例外：纯脚本出口（SCRIPT_ONLY，仅交付口播脚本、不出片）在三层合规+原子化+用户确认齐全后合法早退，不经 STORYBOARD 及之后。**
 
@@ -83,11 +84,11 @@ GENERATING 内部按镜头序列拆分为独立子状态,支持并行执行:
 
 ## 5. 状态转移图
 
-INPUT_PARSE -> CREATIVE_DESIGN -> PLANNING -> STORYBOARD -> ASSET_PREP -> READY -> GENERATING -> VERIFYING -> CORRECTING -> DELIVERING -> DONE
+INPUT_PARSE -> CREATIVE_DESIGN -> PLANNING -> STORYBOARD -> ASSET_PREP -> READY -> GENERATING -> VERIFYING -> CORRECTING -> DELIVERING -> RETROSPECTIVE -> DONE
 
-路径A(完整脚本): INPUT_PARSE -> PLANNING -> STORYBOARD -> ASSET_PREP -> READY -> GENERATING -> VERIFYING -> (CORRECTING) -> DELIVERING -> DONE（跳过CREATIVE_DESIGN;VERIFYING零差异直通DELIVERING跳过CORRECTING）
-路径B(Brief):   INPUT_PARSE -> CREATIVE_DESIGN -> PLANNING -> STORYBOARD -> ASSET_PREP -> READY -> GENERATING -> VERIFYING -> (CORRECTING) -> DELIVERING -> DONE
-路径C(混合):    INPUT_PARSE -> PLANNING -> STORYBOARD -> ASSET_PREP -> READY -> GENERATING -> VERIFYING -> (CORRECTING) -> DELIVERING -> DONE
+路径A(完整脚本): INPUT_PARSE -> PLANNING -> STORYBOARD -> ASSET_PREP -> READY -> GENERATING -> VERIFYING -> (CORRECTING) -> DELIVERING -> RETROSPECTIVE -> DONE
+路径B(Brief):   INPUT_PARSE -> CREATIVE_DESIGN -> PLANNING -> STORYBOARD -> ASSET_PREP -> READY -> GENERATING -> VERIFYING -> (CORRECTING) -> DELIVERING -> RETROSPECTIVE -> DONE
+路径C(混合):    INPUT_PARSE -> PLANNING -> STORYBOARD -> ASSET_PREP -> READY -> GENERATING -> VERIFYING -> (CORRECTING) -> DELIVERING -> RETROSPECTIVE -> DONE
 
 > ASSET_PREP 说明：分镜确认后、READY 前，按需准备素材（默认 reuse/skip，不是每条都生）：
 > - 缺角色/场景/首帧图且用户未提供 → Seedream 生图（`knowledge/video_parameters/image_generation.md`）
