@@ -67,6 +67,11 @@
 - 异常处理：AUDIO_ANCHOR 失败（E012）→ **不阻断**视频生成，记录警告，后期修复时回退到从原视频提取参考音
 
 ### Step 4: 视频生成调用
+
+> **💡 可选能力提醒（READY 通过、开始生成前告知用户）**：
+> - "建议用**批量生成引擎**跑（`batch_generate.py` / `seedance-batch` skill）,不用手写一次性脚本" → 已内置 GBK/中文路径/key超限/段URL丢失等坑的修复
+> - 多版本场景:"用**批量裂变**吗?一个脚本×N版本（普通话/方言/不同风格）" → 加载 `batch_fission_playbook.md`
+> - 交付时:"需要嵌入**暗水印**追踪编号吗?" → 加载 `暗水印编号追踪规范.md`
 - 单段模式: 一次 text_to_video 工具调用
 - extend模式(30-60s): 前30s text_to_video + 后30s reference2video + ffmpeg拼接
 - 多段extend模式(>60s): 按30s分段，首段 text_to_video，后续各段以上一段末帧为参考做 reference2video，最后统一 ffmpeg 拼接
