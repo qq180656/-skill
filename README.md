@@ -1,4 +1,4 @@
-# 保险行业AI视频批量生产规范 v4.2
+# 保险行业AI视频批量生产规范 v4.4
 
 > 保险行业 AI 视频批量生产的端到端执行规范:路由 → 三层合规 → 创意/分镜 → 生成 → 校验 → 交付。作为 Claude Code skill 使用(入口 `~/.claude/skills/ai-video-production/`,细节按需 Read 本库对应文件)。
 
