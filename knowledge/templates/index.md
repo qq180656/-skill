@@ -27,6 +27,7 @@
 | `visual_anchor_spec.md` | 视觉锚点描述集（接缝校验执行层：生成前锚点描述注入→生成后描述级比对→不一致时补偿策略矩阵） | wf_edit（KEEP/CHANGE 接缝校验） |
 | `prompt_patterns.md` | 常见场景 Prompt 模式库（保险视频常见场景的可套用 Prompt 骨架，prompt_craft_guide.md 配套示例册） | wf_storyboard / wf_generation（Prompt 构造参考） |
 | `shot_logic_review.md` | 镜头逻辑自审（场景状态表+单段/多段镜头间连续性自审，检查角色位置/银幕侧/朝向/注视轴/对峙互视轴） | wf_storyboard / wf_verification（镜头逻辑校验） |
+| `0902客供批成片问题复盘与分镜规范升级.md` | 成片实测问题复盘（硬切/台词切点/伤病状态丢）→ 切镜铁律+场景切换决策表+跟随/多人/伤病锚规范+LLM语义审查SOP的溯源文档 | 全流程（防复发SOP，新批次必读） |
 | `insurance_video_genres.md` | 保险视频子品类创意体裁模板（产品讲解型/场景叙事型/专家背书型三大子品类的创意设计指引和分镜模板） | wf_creative_design（子品类创意选型） |
 | `multi_scene_director/` | 多人场景执行引导技能（2+说话角色时强制走多人规范，含街采/对话/群戏场景模板、多人Prompt骨架、人物关系校验门拦） | wf_storyboard / wf_generation（多人场景分镜与生成） |
 | `shot_language_guide.md` | 镜头语言速查（9种核心镜头:反打/过肩/主观/鸟瞰/双人/牛仔/全身/反应/插入——使用场景+创作意图+Prompt写法+保险场景组合速查表） | wf_storyboard（镜头选型）/ wf_creative_design（分镜设计参考） |

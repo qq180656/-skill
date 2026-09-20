@@ -27,6 +27,7 @@ scripts/      可执行工具
   image_to_video.py    生图 → 图生视频 / 多模态参考生视频
   batch_generate.py    批量生成引擎
   fidelity_diff.py     台词保真硬门(分镜/任务台词 vs 原子稿逐字diff)
+  storyboard_review.py 分镜LLM语义审查(台词-画面矛盾/伤病锚/时间线/蜡像听者)
   gate_verify.py / pre_compliance_check.py   合规门 / 分镜前预合规校验
   validate_storyboard.py / count_chars.py    分镜验算 / 台词耗时预计算
   blind_watermark_video.py / blind_watermark_util.py  盲水印(视频/图片)
