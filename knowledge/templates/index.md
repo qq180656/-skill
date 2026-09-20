@@ -29,6 +29,7 @@
 | `shot_logic_review.md` | 镜头逻辑自审（场景状态表+单段/多段镜头间连续性自审，检查角色位置/银幕侧/朝向/注视轴/对峙互视轴） | wf_storyboard / wf_verification（镜头逻辑校验） |
 | `insurance_video_genres.md` | 保险视频子品类创意体裁模板（产品讲解型/场景叙事型/专家背书型三大子品类的创意设计指引和分镜模板） | wf_creative_design（子品类创意选型） |
 | `multi_scene_director/` | 多人场景执行引导技能（2+说话角色时强制走多人规范，含街采/对话/群戏场景模板、多人Prompt骨架、人物关系校验门拦） | wf_storyboard / wf_generation（多人场景分镜与生成） |
+| `shot_language_guide.md` | 镜头语言速查（9种核心镜头:反打/过肩/主观/鸟瞰/双人/牛仔/全身/反应/插入——使用场景+创作意图+Prompt写法+保险场景组合速查表） | wf_storyboard（镜头选型）/ wf_creative_design（分镜设计参考） |
 
 > ⚠️ 下方 `script_template` / `asr_report_template` / `user_notify_template` 为**内联输出模板**（本文件内嵌，非独立 .md 文件），分别供 SCRIPT_PARSE 结构化输出 / VERIFYING 校验报告 / 用户交互通知 使用。
 
