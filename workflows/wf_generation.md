@@ -179,6 +179,7 @@
 📋 Pre-flight(生成前闸门)— 以下流程都走了吗?
 
 □ 1. 合规三层全读 → compliance_report.md 存在且无 BLOCK 项
+     → 报告必须包含三层"已读"证据(通用✅/险种✅/产品专属✅),缺层=FAIL
 □ 2. 脚本原子化 → atomic_scripts.json 存在
 □ 3. ⛔ 脚本保真 → 分镜 Prompt 台词 vs atomic 原文 diff = 空(逐字一致)
      a) 无丢词(如"一个月保费就几十块钱起"不能压缩成"几十块钱起")
