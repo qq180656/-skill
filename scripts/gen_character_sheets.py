@@ -117,7 +117,8 @@ def submit(prompt: str, model: str, w: int, h: int, key: str) -> str:
     return tid
 
 
-def poll(tid: str, key: str, max_wait: float = 270, interval: float = 6) -> str:
+def poll(tid: str, key: str, max_wait: float = 270, interval: float = 6):
+    """轮询到成功，返回 (image_url, task_id)。"""
     deadline = time.monotonic() + max_wait
     while time.monotonic() < deadline:
         time.sleep(interval)
@@ -133,17 +134,34 @@ def poll(tid: str, key: str, max_wait: float = 270, interval: float = 6) -> str:
             if isinstance(url, list):
                 url = url[0] if url else None
             if url:
-                return url
+                return url, tid
         if st in ("failed", "error"):
             raise RuntimeError(f"任务失败：{str(d.get('msg') or d)[:200]}")
     raise TimeoutError(f"生成超时({int(max_wait)}s)：{tid}")
 
 
-def generate_one(ch: dict, cfg: dict, out_dir: Path, key: str, force: bool) -> bool:
+def load_ledger(out_dir: Path) -> dict:
+    p = out_dir / "_image_urls.json"
+    if p.exists():
+        try:
+            return json.loads(p.read_text(encoding="utf-8"))
+        except Exception:
+            return {}
+    return {}
+
+
+def save_ledger(out_dir: Path, ledger: dict):
+    (out_dir / "_image_urls.json").write_text(
+        json.dumps(ledger, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+def generate_one(ch: dict, cfg: dict, out_dir: Path, key: str,
+                 force: bool, ledger: dict) -> bool:
     name = ch["name"]
     out = out_dir / f"{name}.png"
     if out.exists() and out.stat().st_size > 50_000 and not force:
-        log(f"[SKIP] {name} 已存在（{out.stat().st_size // 1024}KB）")
+        has = "有URL台账" if name in ledger else "无URL台账(可--force重出补URL)"
+        log(f"[SKIP] {name} 已存在（{out.stat().st_size // 1024}KB，{has}）")
         return True
     if force and out.exists():
         out.unlink()
@@ -160,10 +178,13 @@ def generate_one(ch: dict, cfg: dict, out_dir: Path, key: str, force: bool) -> b
         try:
             tid = submit(prompt, cfg.get("model", "seedream-5.0-lite"),
                          int(cfg.get("width", 2560)), int(cfg.get("height", 1440)), key)
-            url = poll(tid, key)
+            url, _ = poll(tid, key)
             img = requests.get(url, timeout=120).content
             out.write_bytes(img)
-            log(f"[OK] {name}（{len(img)//1024}KB）→ {out}")
+            ledger[name] = {"task_id": tid, "url": url,
+                            "file": out.name, "ts": time.strftime("%Y-%m-%d %H:%M:%S")}
+            save_ledger(out_dir, ledger)  # 每张落盘一次，中断不丢URL
+            log(f"[OK] {name}（{len(img)//1024}KB）→ {out.name}（URL已入账）")
             return True
         except Exception as e:
             msg = str(e)
@@ -191,10 +212,11 @@ def main():
     out_dir.mkdir(parents=True, exist_ok=True)
 
     key = resolve_key()
-    log(f"角色 {len(chars)} 个 → {out_dir}")
+    ledger = load_ledger(out_dir)
+    log(f"角色 {len(chars)} 个 → {out_dir}（URL台账 {len(ledger)} 条）")
     ok = fail = 0
     for ch in chars:
-        if generate_one(ch, cfg, out_dir, key, args.force):
+        if generate_one(ch, cfg, out_dir, key, args.force, ledger):
             ok += 1
         else:
             fail += 1

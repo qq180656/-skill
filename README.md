@@ -22,10 +22,15 @@ knowledge/
   video_parameters/    模型参数 / 字幕烧录 / ASR / 分段打包
 scripts/      可执行工具
   skill_config.py      参数中心(Key 走环境变量)
+  atomize_script.py    脚本原子化(去括号/删词/注空格/计时长)→atomic_scripts.json
+  gen_character_sheets.py  角色四视图批量生图(配置JSON驱动,16:9,无痣)
   image_to_video.py    生图 → 图生视频 / 多模态参考生视频
   batch_generate.py    批量生成引擎
+  fidelity_diff.py     台词保真硬门(分镜/任务台词 vs 原子稿逐字diff)
   gate_verify.py / pre_compliance_check.py   合规门 / 分镜前预合规校验
   validate_storyboard.py / count_chars.py    分镜验算 / 台词耗时预计算
+  blind_watermark_video.py / blind_watermark_util.py  盲水印(视频/图片)
+  replace_section.py   分镜md按shot整段替换/删除；auto_repair.py 发音修复(依赖缺失,见已知问题)
 meta/         changelog / glossary / 修订上下文
 outputs/      交付标准 / 资产管理 / 暗水印编号规范
 ```
