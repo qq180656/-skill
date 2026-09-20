@@ -110,3 +110,47 @@ VERIFYING -> CORRECTING 循环:
 任意状态 -> WAITING_USER -> 回到来源状态
 任意状态 -> REPAIRING -> 回到来源状态(GENERATING内部)
 DONE/交付后 -> EDIT -> 按修改类型回退对应阶段（音频级/字幕级→就地修改后回 VERIFYING；镜头级→GENERATING 单镜头重做(VIDEO_REDO)；台词级→STORYBOARD；脚本级→INPUT_PARSE 按路径A/B重走）；EDIT 的定位/KEEP-CHANGE/版本(_v2)语义见 wf_edit.md，产物从磁盘(_task_ids.jsonl/交付目录)定位
+
+## 6. 批量并行策略(多条脚本编排)
+
+> 用户一次给 N 条脚本时(如"做 8 条好医保中老年的街采"),按以下策略编排,而非一条跑完 10 步再跑下一条。
+
+### 共享阶段(做一次,全批共用)
+- **INPUT_PARSE** → 一次路由判定(全批同产品同路径)
+- **CREATIVE_DESIGN**(路径B) → 一份 creative_design.md 全批共用(角色/调性/叙事统一)
+- **合规三层读取** → 同产品只读一次(通用+险种+产品专属),结论全批复用
+
+### 独立阶段(每条脚本独立,可并行)
+- **PLANNING**(原子化/合规校验) → 各条独立,可并行处理
+- **STORYBOARD** → 各条独立分镜,可并行
+- **ASSET_PREP** → 共用角色图(同角色不重复生成),场景图按需各自生成
+- **GENERATING** → 并发 4(跨脚本动态调度:完成一个立即启动下一个)
+- **VERIFYING / CORRECTING** → 各条独立校验/纠正,可并行
+- **DELIVERING** → 本地归档并行 + 飞书同步并行
+
+### 同步点(必须等全批到齐)
+- **READY 确认门** → 全批分镜 + 合规报告**一起展示给用户确认**(不一条一条确认——减少确认轮次)
+- **Pre-flight** → 全批过完才开始生成
+- **RETROSPECTIVE** → 等全批交付完才复盘(需要全局信息)
+
+### 编排流程图
+
+```
+共享: INPUT_PARSE → CREATIVE_DESIGN → 合规读取(一次)
+        ↓
+并行: [脚本1: PLANNING→STORYBOARD] [脚本2: PLANNING→STORYBOARD] ... [脚本N]
+        ↓ (全部完成)
+同步: ASSET_PREP(共享角色图) → READY(全批一次确认) → Pre-flight(全批)
+        ↓
+并行: GENERATING(并发4,跨脚本动态调度)
+        ↓ (逐条完成即进校验,不等全部生成完)
+流水线: 脚本1完成 → Post-flight → VERIFYING → CORRECTING → DELIVERING
+        脚本2完成 → Post-flight → VERIFYING → CORRECTING → DELIVERING
+        ...
+        ↓ (全部交付完成)
+同步: RETROSPECTIVE → DONE
+```
+
+### 脚本间依赖规则
+- **无依赖**(默认):各条脚本独立,并行跑
+- **有依赖**(用户明说"后面几条是前面的续集/衔接"):按用户指定顺序串行,前一条交付后再启动后一条的 GENERATING

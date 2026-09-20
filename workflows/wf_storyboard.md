@@ -95,6 +95,7 @@
 
 #### 1e：TTS 空格注入与台词校对
 - 应用 pronunciation_rules 的空格注入（删除级词、空格级词、CAR-T读"卡替"等），确保 Prompt 台词与原子脚本一致
+- ⛔ **台词保真 diff（1e 完成后立即执行）**：把 storyboard 所有镜头 Prompt 的台词段（`{...}`内文字）按顺序拼起来，与 `atomic_scripts.json` 全部 text 拼起来做**逐字 diff**。diff 非空 = **FAIL，列出具体改了哪几个字，回 1c 重写对应镜头 Prompt**。不等到生成后才查——改词在分镜阶段发生最多，就在分镜阶段拦。
 - 用 storyboard_template 输出 storyboard.md
 
 ### Step 2：校验与优化（按优先级，P0 必须卡住）
