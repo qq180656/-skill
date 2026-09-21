@@ -35,7 +35,7 @@
      - 好医保系列（中老年/门诊险/少儿）：7字/秒
      - 长钱保：6字/秒
      - 通用默认：7字/秒
-- 输出: 原子脚本列表，每个原子含 {atom_id, text, est_duration, warning_ref}
+- 输出: 原子脚本列表，每个原子含 {atom_id, spoken(=期望朗读文本), est_duration, warning_ref}（注：字段名以 `atomize_script.py` 实际输出为准,文档中 `text`/`spoken` 均指同一字段——原子化后的期望朗读文本;`fidelity_diff.py` 读的是 `spoken` 字段）
 
 ### Step 3: 合规校验 (COMPLIANCE_CHECK)
 - **依据文件（调度权威，必读）**: `knowledge/compliance/trigger_conditions.md`（触发时机与阻断行为）+ `knowledge/compliance/rules.md`（三层叠加体系+警示语映射+前贴豁免），再按下述三层逐层读取 通用/险种/产品 文件。三者共同构成 COMPLIANCE_CHECK 的规则来源，**不得只凭本文件内联描述执行**。
