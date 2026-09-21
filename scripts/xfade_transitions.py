@@ -28,8 +28,11 @@ if not Path(FFMPEG).is_file():
 def probe_dur(p: Path) -> float:
     r = subprocess.run(
         [FFMPEG, "-i", str(p), "-f", "null", "-"],
-        capture_output=True, text=True, timeout=120)
-    m = re.search(r"Duration: (\d+):(\d+):([\d.]+)", r.stderr)
+        capture_output=True, timeout=120)
+    err = r.stderr
+    if isinstance(err, bytes):
+        err = err.decode("utf-8", errors="replace")
+    m = re.search(r"Duration: (\d+):(\d+):([\d.]+)", err or "")
     if not m:
         raise RuntimeError(f"读不到时长: {p}")
     h, mi, s = int(m.group(1)), int(m.group(2)), float(m.group(3))

@@ -9,7 +9,7 @@
 配置 JSON 格式（descriptions 即"由头到脚物理白描"，不要带"四视图"等画面指令）：
 {
   "model": "seedream-5.0-lite",          // 可选，默认此值
-  "width": 2560, "height": 1440,         // 可选，16:9 且总像素>=3686400
+  "width": 3840, "height": 2160,         // 可选，16:9 且总像素>=3686400，默认4K
   "characters": [
     {"name": "character_A_mama", "desc": "32岁中国都市职场女性，窄长瓜子脸……雾霾蓝V领针织开衫……"},
     {"name": "group_baby", "kind": "custom",
@@ -237,7 +237,7 @@ def main():
 
         try:
             tid = submit(prompt, cfg.get("model", "seedream-5.0-lite"),
-                         int(cfg.get("width", 2560)), int(cfg.get("height", 1440)), key)
+                         int(cfg.get("width", 3840)), int(cfg.get("height", 2160)), key)
             log(f"[SUBMIT] {name} → task_id={tid[:16]}...")
             tasks.append((ch, tid, prompt))
         except Exception as e:

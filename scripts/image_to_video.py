@@ -99,7 +99,7 @@ def generate_character_sheet(
     character_desc: str,
     style: str = "写实",
     key: str = "",
-    size: str = "2K",
+    size: str = "4K",
     output_path: str = "",
 ) -> str:
     """生成角色四视图设定稿。返回图片URL。
@@ -175,7 +175,7 @@ def generate_scene_image(
     tid = _submit("text2image_v5_0", {
         "model_id": SEEDREAM_MODEL,
         "prompt": prompt,
-        "size": "2K",
+        "size": "4K",
         "watermark": False,
     }, key)
     if not tid:
