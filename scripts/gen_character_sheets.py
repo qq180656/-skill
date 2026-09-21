@@ -214,14 +214,90 @@ def main():
     key = resolve_key()
     ledger = load_ledger(out_dir)
     log(f"角色 {len(chars)} 个 → {out_dir}（URL台账 {len(ledger)} 条）")
-    ok = fail = 0
+
+    # ── 阶段1: 并行提交全部任务,收集 task_id ──
+    tasks = []  # [(ch, task_id, prompt)] 或 None(跳过/审核拦截)
     for ch in chars:
-        if generate_one(ch, cfg, out_dir, key, args.force, ledger):
-            ok += 1
+        name = ch["name"]
+        out = out_dir / f"{name}.png"
+        if out.exists() and out.stat().st_size > 50_000 and not args.force:
+            has = "有URL台账" if name in ledger else "无URL台账(可--force重出补URL)"
+            log(f"[SKIP] {name} 已存在（{out.stat().st_size // 1024}KB，{has}）")
+            tasks.append(None)
+            continue
+        if args.force and out.exists():
+            out.unlink()
+
+        kind = ch.get("kind", "sheet")
+        if kind == "custom":
+            prompt = ch["prompt"]
         else:
-            fail += 1
-        time.sleep(2)  # QPM 礼貌间隔
-    log(f"完成：成功{ok} 失败{fail}")
+            desc = ch["desc"].rstrip("。.")
+            prompt = f"{desc}。{SHEET_SUFFIX}"
+
+        try:
+            tid = submit(prompt, cfg.get("model", "seedream-5.0-lite"),
+                         int(cfg.get("width", 2560)), int(cfg.get("height", 1440)), key)
+            log(f"[SUBMIT] {name} → task_id={tid[:16]}...")
+            tasks.append((ch, tid, prompt))
+        except Exception as e:
+            log(f"[SUBMIT_FAIL] {name}: {str(e)[:120]}")
+            tasks.append(None)
+        time.sleep(1)  # 提交间隔(防瞬时并发过高)
+
+    # ── 阶段2: 统一轮询全部任务 ──
+    ok = fail = skip = 0
+    pending = {i: t for i, t in enumerate(tasks) if t is not None}
+    max_wait = 300  # 最长等5分钟
+    deadline = time.monotonic() + max_wait
+
+    while pending and time.monotonic() < deadline:
+        time.sleep(6)
+        done_ids = []
+        for i, (ch, tid, prompt) in pending.items():
+            name = ch["name"]
+            out = out_dir / f"{name}.png"
+            try:
+                d = post("/task_status", {"task_id": tid}, key, retries=2)
+            except Exception:
+                continue  # 单次轮询失败继续等
+            st = (d.get("status") or "").lower()
+            if st in ("succeeded", "completed"):
+                url = (d.get("video_url") or d.get("image_url")
+                       or d.get("url") or d.get("image_urls"))
+                if isinstance(url, list):
+                    url = url[0] if url else None
+                if url:
+                    try:
+                        img = requests.get(url, timeout=120).content
+                        out.write_bytes(img)
+                        ledger[name] = {"task_id": tid, "url": url,
+                                        "file": out.name, "ts": time.strftime("%Y-%m-%d %H:%M:%S")}
+                        save_ledger(out_dir, ledger)
+                        log(f"[OK] {name}（{len(img)//1024}KB）→ {out.name}")
+                        ok += 1
+                    except Exception as e:
+                        log(f"[DL_FAIL] {name}: {str(e)[:80]}")
+                        fail += 1
+                else:
+                    log(f"[NO_URL] {name}: 任务成功但无图片URL")
+                    fail += 1
+                done_ids.append(i)
+            elif st in ("failed", "error"):
+                msg = str(d.get("msg") or d)[:120]
+                log(f"[FAIL] {name}: {msg}")
+                fail += 1
+                done_ids.append(i)
+        for i in done_ids:
+            del pending[i]
+
+    # 超时未完成的
+    for i, (ch, tid, prompt) in pending.items():
+        log(f"[TIMEOUT] {ch['name']}: 超时未完成 task_id={tid[:16]}")
+        fail += 1
+
+    skip = sum(1 for t in tasks if t is None)
+    log(f"完成：成功{ok} 失败{fail} 跳过{skip}（并行提交+统一轮询）")
     sys.exit(1 if fail else 0)
 
 
