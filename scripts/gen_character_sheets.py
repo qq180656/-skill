@@ -250,6 +250,9 @@ def main():
     pending = {i: t for i, t in enumerate(tasks) if t is not None}
     max_wait = 300  # 最长等5分钟
     deadline = time.monotonic() + max_wait
+    MAX_RETRY = 5  # 同一张图自动重试上限(含所有错误类型)
+    retry_counts = {}  # {name: {"count": N, "errors": [...]}}
+    final_fail = []  # [(name, reason, detail)]
 
     while pending and time.monotonic() < deadline:
         time.sleep(6)
@@ -284,20 +287,121 @@ def main():
                     fail += 1
                 done_ids.append(i)
             elif st in ("failed", "error"):
-                msg = str(d.get("msg") or d)[:120]
+                msg = str(d.get("msg") or d)[:200]
                 log(f"[FAIL] {name}: {msg}")
-                fail += 1
-                done_ids.append(i)
+                retry_info = retry_counts.get(name, {"count": 0, "errors": []})
+                retry_info["count"] += 1
+                retry_info["errors"].append(msg)
+                retry_counts[name] = retry_info
+
+                if any(k in msg.lower() for k in ("敏感", "违规", "moderation", "security")):
+                    log(f"  → 审核拦截,不自动重试(用户决定)")
+                    final_fail.append((name, "审核拦截", msg))
+                    done_ids.append(i)
+                elif any(k in msg.lower() for k in ("copyright", "版权")):
+                    log(f"  → 版权拦截,不自动重试(用户决定)")
+                    final_fail.append((name, "版权拦截", msg))
+                    done_ids.append(i)
+                elif retry_info["count"] >= MAX_RETRY:
+                    log(f"  → 已重试{MAX_RETRY}次,放弃")
+                    final_fail.append((name, f"重试{MAX_RETRY}次仍失败", msg))
+                    done_ids.append(i)
+                else:
+                    wait = 10 * retry_info["count"]
+                    log(f"  → 第{retry_info['count']}次失败,{wait}s后重试提交")
+                    time.sleep(wait)
+                    try:
+                        new_tid = submit(prompt, cfg.get("model", "seedream-5.0-lite"),
+                                         int(cfg.get("width", 2560)), int(cfg.get("height", 1440)), key)
+                        log(f"  → 重试提交成功 task_id={new_tid[:16]}...")
+                        pending[i] = (ch, new_tid, prompt)
+                    except Exception as e2:
+                        log(f"  → 重试提交也失败: {str(e2)[:80]}")
+                        final_fail.append((name, "重试提交失败", str(e2)[:120]))
+                        done_ids.append(i)
         for i in done_ids:
             del pending[i]
 
-    # 超时未完成的
-    for i, (ch, tid, prompt) in pending.items():
-        log(f"[TIMEOUT] {ch['name']}: 超时未完成 task_id={tid[:16]}")
-        fail += 1
+    # 超时未完成的——也尝试重试
+    timeout_items = list(pending.items())
+    for i, (ch, tid, prompt) in timeout_items:
+        name = ch["name"]
+        retry_info = retry_counts.get(name, {"count": 0, "errors": []})
+        retry_info["count"] += 1
+        retry_counts[name] = retry_info
+        if retry_info["count"] >= MAX_RETRY:
+            log(f"[TIMEOUT] {name}: 超时且已重试{MAX_RETRY}次,放弃")
+            final_fail.append((name, "超时+重试耗尽", f"task_id={tid[:16]}"))
+        else:
+            log(f"[TIMEOUT] {name}: 超时,重新提交第{retry_info['count']}次...")
+            try:
+                new_tid = submit(prompt, cfg.get("model", "seedream-5.0-lite"),
+                                 int(cfg.get("width", 2560)), int(cfg.get("height", 1440)), key)
+                pending[i] = (ch, new_tid, prompt)
+            except Exception:
+                final_fail.append((name, "超时+重试提交失败", f"task_id={tid[:16]}"))
+                del pending[i]
+
+    # 如果有超时重试的,再跑一轮 poll
+    if pending:
+        log(f"超时重试 {len(pending)} 张,再等 {max_wait}s...")
+        deadline2 = time.monotonic() + max_wait
+        while pending and time.monotonic() < deadline2:
+            time.sleep(6)
+            done_ids = []
+            for i, (ch, tid, prompt) in pending.items():
+                name = ch["name"]
+                out = out_dir / f"{name}.png"
+                try:
+                    d = post("/task_status", {"task_id": tid}, key, retries=2)
+                except Exception:
+                    continue
+                st = (d.get("status") or "").lower()
+                if st in ("succeeded", "completed"):
+                    url = (d.get("video_url") or d.get("image_url")
+                           or d.get("url") or d.get("image_urls"))
+                    if isinstance(url, list):
+                        url = url[0] if url else None
+                    if url:
+                        try:
+                            img = requests.get(url, timeout=120).content
+                            out.write_bytes(img)
+                            ledger[name] = {"task_id": tid, "url": url,
+                                            "file": out.name, "ts": time.strftime("%Y-%m-%d %H:%M:%S")}
+                            save_ledger(out_dir, ledger)
+                            log(f"[OK-RETRY] {name}（{len(img)//1024}KB）")
+                            ok += 1
+                        except Exception as e:
+                            final_fail.append((name, "下载失败", str(e)[:80]))
+                    else:
+                        final_fail.append((name, "成功但无URL", ""))
+                    done_ids.append(i)
+                elif st in ("failed", "error"):
+                    final_fail.append((name, "重试仍失败", str(d.get("msg") or "")[:120]))
+                    done_ids.append(i)
+            for i in done_ids:
+                del pending[i]
+        for i, (ch, tid, prompt) in pending.items():
+            final_fail.append((ch["name"], "最终超时", f"task_id={tid[:16]}"))
+
+    fail = len(final_fail)
 
     skip = sum(1 for t in tasks if t is None)
-    log(f"完成：成功{ok} 失败{fail} 跳过{skip}（并行提交+统一轮询）")
+    log(f"完成：成功{ok} 失败{fail} 跳过{skip}（并行提交+统一轮询+自动重试上限{MAX_RETRY}次）")
+    if final_fail:
+        log("─── 失败详情 ───")
+        for name, reason, detail in final_fail:
+            retries = retry_counts.get(name, {}).get("count", 0)
+            log(f"  {name}: {reason}（重试{retries}次）{detail[:80]}")
+        log("─── 审核/版权拦截需用户决定:修改描述/换角色/放弃 ───")
+    # 写重试日志到 _session
+    retry_log_path = out_dir / "_image_retry_log.json"
+    retry_log_path.write_text(json.dumps({
+        "final_fail": [{"name": n, "reason": r, "detail": d} for n, r, d in final_fail],
+        "retry_counts": retry_counts,
+        "ok": ok, "fail": fail, "skip": skip,
+        "ts": time.strftime("%Y-%m-%d %H:%M:%S"),
+    }, ensure_ascii=False, indent=2), encoding="utf-8")
     sys.exit(1 if fail else 0)
 
 
