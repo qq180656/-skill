@@ -81,6 +81,7 @@
 □ 2. 脚本原子化 → atomic_scripts.json 存在
 □3. ⛔ 确认 Step2 台词保真 diff 已执行且=空;Step2 后若动过 Prompt 则重跑
 □ 4. 前贴/成片判定 → video_type 已标注(按 router §5)
+□ 4b. **整条 Prompt 总字数 ≤ 模型取用值**（规则见 config_matrix「Prompt 总字数控制」）→ 超限时按其五级精简顺序砍后重数
 □ 5. 角色图确认(路径二) → 四视图+场景图已展示给用户确认(路径一跳过)
 □ 6. READY 确认门 → storyboard.md 存在(SCRIPT_ONLY 豁免)且用户已确认分镜+合规+时长+角色图+脚本标注
 □ 7. ⛔ 多版本矩阵差异确认（N≥3条/脚本时，2026-09-21新增）
