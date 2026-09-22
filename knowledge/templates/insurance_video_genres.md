@@ -1,6 +1,8 @@
 # 保险视频子品类创意体裁模板
 
 > 对标平台原生 `video_creation` 技能的创意体裁模块（marketing-ad / knowledge-explainer / short-drama 等），针对保险视频的三大子品类给出创意设计指引和分镜模板。保险技能已有的 `creative_design_template.md` 和 `narrative_arc.md` 定义通用格式，本文件补充子品类特化内容。
+>
+> → 切镜规则统一见 [cutting_rules.md](cutting_rules.md)（唯一权威），本文件不再复述：下文各模板中"每X秒切镜/穿插空镜"的节奏值与"正反打+听者反应"写法均为与其③⑤一致的速查提及，规则本体（含数值与例外）以 cutting_rules 为准。
 
 ## 子品类 A：产品讲解型（口播直述）
 

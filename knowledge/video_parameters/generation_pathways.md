@@ -37,7 +37,7 @@ Step N: 多段extend（>60s 时）
 ### 关键规则
 - **首段为源片**：第一段 text_to_video 的产物是整条视频的内容基准，后续所有段从它延续
 - **末帧承接**：每段生成完成后截取末帧（`shot_NN_endframe.png`），作为下一段 reference2video 的输入；末帧在拼接完成前不可删除
-- **台词边界保护**：分段点必须落在句读边界（。！？）之后，禁止切半句；30s 落点在句中则前推到最近句末
+- **台词边界保护**：→ 切点规则统一见 [cutting_rules.md](../templates/cutting_rules.md)（唯一权威）①·切点铁律"切点落句读边界"（分段点必须落在句读之后、禁止切半句、30s 落点在句中则前推到最近句末），本节不再复述
 - **时长判定**：
   - 修正后总时长 ≤ 30s → 单段 text_to_video，不走 extend
   - 30s < 总时长 ≤ 60s → 首段 text_to_video + 次段 extend
@@ -88,7 +88,7 @@ Step 1~N: 逐镜头视频生成
 
 > **路径二时长判定（与路径一对称，优先于上方逐镜头拆解）**：
 > - 修正后总时长 **≤ 30s** → **一次 reference2video 调用**，ImageList 传全部参考图（角色+场景），分镜中的多个镜头**合并为段内切镜点**（Prompt 里按时间轴分段描述不同景别/机位/说话者，而非拆成独立调用）。duration 按修正后总时长取档（精细预算含停顿/角色切换/段末缓冲，计算方法见 `segmentation_packaging.md` Step 6；取 5s 步进：10/15/20/25/30）。多角色正反打在 Prompt 时间轴内用"第X-Y秒：近景A说话→第Y-Z秒：近景B回答"描述，不拆独立调用。
->   - ⛔ **段内切镜空间红线（0902 实测）**：≤30s 合并只允许**同一空间内**换景别/机位/构图。**跨物理空间(餐厅→阳台、家→医院)即使≤30s 也必须拆成独立段**(并行 t2v+concat,段间用 `xfade_transitions.py` 0.4s 叠化过渡)。相邻贯通空间(走廊→病房门口)可用跟随运镜写进同段。详见 `segmentation_packaging.md` §三 + `0902客供批成片问题复盘与分镜规范升级.md`。
+>   - ⛔ **段内切镜空间红线（0902 实测）**：→ 切镜规则统一见 [cutting_rules.md](../templates/cutting_rules.md)（唯一权威）④·空间与拆段（同一空间允许同段合并 / 相邻贯通空间用跟随运镜桥接 / 跨物理空间即使≤30s 必须拆成独立段：并行 t2v+concat，段间用 `xfade_transitions.py` 0.4s 叠化过渡），本节不再复述。背景见 `segmentation_packaging.md` §三 + `../templates/0902客供批成片问题复盘与分镜规范升级.md`。
 > - 修正后总时长 **> 30s** → 按上方 Step 1~N 逐段拆（首段 reference2video + 后续段 extend），每段内仍可包含多个切镜点（上限9个对白镜头，见 segmentation_packaging）。
 
 合并：render_video
