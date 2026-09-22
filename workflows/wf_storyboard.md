@@ -14,6 +14,7 @@
 ## 依赖知识库
 - `knowledge/templates/storyboard_template.md` — 分镜表格式模板
 - `knowledge/templates/prompt_craft_guide.md` — Prompt编写指南（分层结构+运镜+起幅落幅+音频符号+失败兜底）
+- `knowledge/templates/shot_language_guide.md` — 9种镜头选型 + 剪辑基础法则（180°/30°角/视线匹配/情感节奏），分镜选镜头时必读
 - `knowledge/templates/prompt_patterns.md` — 常见场景 Prompt 模式库（保险视频常见场景的可套用 Prompt 骨架，prompt_craft_guide.md 配套示例册）
 - `knowledge/templates/character_lock_protocol.md` — 角色锁定协议（参考图逐镜头重复传参）
 - `knowledge/templates/multi_character_layout_spec.md` — 多角色布局控制方案（空间占位符+角色/场景解耦引用，解决多角色镜头中角色融合/变脸问题）
