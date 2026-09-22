@@ -44,6 +44,107 @@ ASR_VENV_PY = ASR_SOURCE_DIR / ".venv" / "Scripts" / "python.exe"
 ASR_WORDS_DIR = "cache_asr_words"
 SRT_OUT_DIR = "cache_srt"
 SUBTITLE_SUFFIX = "_带字幕"
+# 字幕强制单行:软上限14字(规范 subtitle_burnin Step2),超了切句
+SINGLE_LINE_MAX = 14
+
+
+def _tokenize_for_split(s: str) -> list[str]:
+    """把台词切成"词单元":数字+量词/英文/中文各一词;
+    标点绑定到它**后面**的词(如 "、超声" 一体),首词无前随标点。
+    换行时标点跟词走,不出现在行首,也不产生"词、"残句。
+    """
+    WORD = r"\d+(?:\.\d+)?%?[万亿千百十点元年岁]?|[A-Za-z0-9]+|[一-鿿]+"
+    TOKEN_RE = re.compile(rf"([，、；。！？,.!?]*)?(?:{WORD})")
+    tokens = []
+    for m in TOKEN_RE.finditer(s):
+        lead = m.group(1) or ""
+        tokens.append(m.group(0))  # 含前随标点
+    return tokens
+
+
+def _group_coord_parts(tokens: list[str]) -> list[str]:
+    """把"顿号连接的相邻短词"合并成不可拆并列组。
+
+    如 ['CT', '、超声', '、胃肠镜'] → ['CT、超声、胃肠镜']。
+    逗号/分号/句号是强停顿,不跨;合并后整块超 SINGLE_LINE_MAX 则拆开(保持各词)。
+    """
+    groups: list[str] = []
+    buf = ""
+    for tok in tokens:
+        lead = re.match(r"[，、；。！？,.!?]*", tok).group(0)
+        # 仅顿号连接才并入;其它标点(，；。)断开
+        if buf and set(lead) == {"、"} and len(_strip_punct(buf + tok)) <= SINGLE_LINE_MAX:
+            buf += tok
+        else:
+            if buf:
+                groups.append(buf)
+            buf = tok
+    if buf:
+        groups.append(buf)
+    return groups
+
+
+def _split_one_line(line: str) -> list[str]:
+    """把一句超长台词打包成多条 ≤SINGLE_LINE_MAX 的单行。
+
+    两�步:
+    1. 顿号连接的并列短词先粘成"并列组"(CT、超声、胃肠镜 同行,不被行边界拆散)。
+    2. 各组逐个进行;下一组放不下 → 当前行收口、下一组整体移到新行;
+       组的前随标点(逗号等强停顿)贴在上一行尾,词不开标点行首。
+    一个组自身超14字(罕见)→ 拆回单词;词也超 → 硬切。
+    """
+    tokens = _tokenize_for_split(line)
+    groups = _group_coord_parts(tokens)
+    segs: list[str] = []
+    buf = ""
+
+    def flush() -> None:
+        nonlocal buf
+        if buf.strip():
+            segs.append(buf.strip())
+        buf = ""
+
+    for grp in groups:
+        n = len(_strip_punct(grp))
+        if n > SINGLE_LINE_MAX:
+            flush()
+            # 组超长 → 拆回单词重切
+            for tok in _tokenize_for_split(grp):
+                w = _strip_punct(tok)
+                if len(w) <= SINGLE_LINE_MAX:
+                    segs.append(tok)
+                else:
+                    for i in range(0, len(w), SINGLE_LINE_MAX):
+                        segs.append(w[i:i + SINGLE_LINE_MAX])
+            continue
+        if len(_strip_punct(buf)) + n <= SINGLE_LINE_MAX:
+            buf += grp
+        else:
+            # 组移下行:前随标点贴上句尾(停顿属于上句),组词开新行
+            lead = re.match(r"[，、；。！？,.!?]*", grp).group(0)
+            word = grp[len(lead):]
+            if lead and buf:
+                buf += lead
+            flush()
+            buf = word
+    flush()
+    return segs
+
+
+def _split_long_lines(lines: list[str]) -> list[str]:
+    """超 SINGLE_LINE_MAX 的台词切成多条单行。
+
+    保证:① 数字+单位/英文不拆断 ②标点不出现行首 ③无 ≤2字独立残句
+    ④每条 ≤14字、尽量语义完整。
+    """
+    out: list[str] = []
+    for line in lines:
+        if len(_strip_punct(line)) <= SINGLE_LINE_MAX:
+            out.append(line)
+        else:
+            out.extend(_split_one_line(line))
+    return out
+
 
 
 # ════════════════════════════════════════════════════════
@@ -131,6 +232,21 @@ def align(video: Path, script_path: Path) -> Path:
         sys.exit("客户原稿未抽出台词,检查格式")
 
     # 全局字指针:顺序消费逐字稿。一句原稿消耗对应字数,起止取首末词时间。
+    # 字幕强制单行:超 SINGLE_LINE_MAX 的台词先切成多条,不挤进一行/不靠ASS折行。
+    script_lines = _split_long_lines(script_lines)
+
+    # 换行边界:条目前导标点(，、；)是上一句停顿 → 移到上一条结尾,
+    # 绝不让字幕以标点开头(根因:tokenize 把标点绑给了后词)
+    relocated: list[str] = []
+    for line in script_lines:
+        m = re.match(r"[，、；,.!?]+", line)
+        if m and relocated:
+            lead = m.group(0)
+            relocated[-1] += lead            # 标点贴上一条尾
+            line = line[len(lead):]
+        relocated.append(line)
+    script_lines = relocated
+
     entries: list[tuple[float, float, str]] = []
     wi = 0
     for line in script_lines:
@@ -142,6 +258,19 @@ def align(video: Path, script_path: Path) -> Path:
         end = float(words[end_wi]["end_sec"])
         entries.append((start, end, line))
         wi += n
+
+    # 相邻条目零间隙 → 结束提前 GAP;结尾逗号/顿号剥掉(停顿由间隙表达,
+    # 防止同帧叠显",下句"的残影)
+    GAP = 0.06
+    fixed: list[tuple[float, float, str]] = []
+    for i, (s, e, txt) in enumerate(entries):
+        nxt = entries[i + 1][0] if i + 1 < len(entries) else None
+        if nxt is not None and e >= nxt - 0.001:
+            e = nxt - GAP
+            if txt and txt[-1] in "，、,.":
+                txt = txt[:-1]
+        fixed.append((s, e, txt))
+    entries = fixed
 
     srt = "".join(
         f"{i}\n{_ts(s)} --> {_ts(e)}\n{txt}\n\n"
@@ -196,7 +325,9 @@ def _srt_to_ass_events(srt_path: Path) -> list[str]:
         start = _ass_t(times[0].strip())
         end = _ass_t(times[1].strip())
         body = "\\N".join(lines[2:]).replace(",", "，")
-        events.append(f"Dialogue: 0,{start},{end},Default,,0,0,0,,{body}")
+        # Dialogue 字段: Layer,Start,End,Style,Name,MarginL,MarginR,Effect,Text
+        # Name/Effect 留空(,,),不填多余 0(否则逗号被 libass 当文本开头)
+        events.append(f"Dialogue: 0,{start},{end},Default,,0,0,,{body}")
     return events
 
 
@@ -217,8 +348,8 @@ PlayResY: 1920
 
 [V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, OutlineColour, BackColour, Bold, Italic, BorderStyle, Outline, Shadow, Alignment, MarginV, Encoding
-Style: Default,Arial,72,&H00FFFFFF,&H00000000,&H00000000,0,0,1,3,1,2,120,1
-Style: Warn,Arial,38,&H00CCCCCC,&H00000000,&H00000000,0,0,1,1,0,2,28,1
+Style: Default,思源黑体,75,&H00FFFFFF,&H00000000,&H00000000,0,0,1,3,1,2,480,1
+Style: Warn,思源黑体,27,&H00CCCCCC,&H00000000,&H00000000,0,0,1,1,0,2,10,1
 
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, Effect, Text
@@ -238,8 +369,10 @@ def burn(video: Path, warning: str) -> Path:
     # 生成含口播 + 警示语的 ASS
     events = _srt_to_ass_events(srt)
     if warning:
+        # Dialogue 字段: Layer,Start,End,Style,Name,MarginL,MarginR,Effect,Text
+        # Name/Effect 留空(,,),不填多余的 0(否则逗号被 libass 当文本开头)
         events.insert(0,
-            "Dialogue: 0,0:00:00.00,9:00:00.00,Warn,,0,0,0,," + warning)
+            "Dialogue: 0,0:00:00.00,9:00:00.00,Warn,,0,0,," + warning)
     ass = workdir / f"{video.stem}.ass"
     ass.write_text(_ASS_HEADER + "\n".join(events) + "\n", encoding="utf-8")
 
@@ -291,7 +424,7 @@ def main() -> int:
     elif args.cmd == "burn":
         burn(v, args.warn)
     else:  # all
-        run_asr(v)
+        load_words(v)   # 有缓存直接命中,无则跑 ASR(不强制重跑)
         align(v, args.script)
         burn(v, args.warn)
     return 0
