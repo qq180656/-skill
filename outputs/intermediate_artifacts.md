@@ -14,7 +14,7 @@
 | 产物 | 格式 | 路径 | 说明 |
 |------|------|------|------|
 | 结构化脚本 | JSON | {project}/_session/parsed_script.json | SCRIPT_PARSE输出 |
-| 原子脚本列表 | JSON | {project}/_session/atomic_scripts.json | SCRIPT_ATOMIZE输出；其 text 字段=**期望朗读文本(expected_readback_text)**，是 VERIFYING/DIFF_ANALYSIS 的唯一比对基准（非原始脚本） |
+| 原子脚本列表 | JSON | {project}/_session/atomic_scripts.json | SCRIPT_ATOMIZE输出；其 **spoken** 字段=**期望朗读文本(expected_readback_text)**，是 VERIFYING/DIFF_ANALYSIS 的唯一比对基准（非原始脚本） |
 | 合规报告 | Markdown | {project}/_session/compliance_report.md | COMPLIANCE_CHECK输出 |
 | 脚本标注文档 | Markdown | {project}/{YYYY-MM-DD}/脚本标注/{序号}_{名称}.md | 成片才有，生成前用户确认 |
 

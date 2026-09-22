@@ -31,7 +31,7 @@
 | PLANNING | 主干状态:脚本解析(SCRIPT_PARSE)+原子化(SCRIPT_ATOMIZE)+合规校验(COMPLIANCE_CHECK) |
 | SKIP(异常) | 异常等级之一:任务无意义/用户要求跳过 → 跳过进下一任务 |
 | 原子化(SCRIPT_ATOMIZE) | 把脚本拆成TTS友好原子单位:去括号/5-8字断句/空格注入/删除级词删除/数字保护 |
-| 期望朗读文本 | 原子化后的文本(atomic_scripts.json的text)，VERIFYING/DIFF唯一比对基准 |
+| 期望朗读文本 | 原子化后的文本(atomic_scripts.json 的 spoken 字段)，VERIFYING/DIFF唯一比对基准 |
 | KEEP/CHANGE | 修改协议:明确哪些镜头保留(KEEP复用)、哪些重做(CHANGE) |
 | extend模式 | 单段超模型上限:前段text2video+后段reference2video+ffmpeg拼接 |
 | 音色锚定(AUDIO_ANCHOR) | 为多角色/指定音色生成音色样本，作生成/修复参考音 |

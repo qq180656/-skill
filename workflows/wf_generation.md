@@ -36,7 +36,7 @@
 
 ### Step 2: Prompt构造
 - **台词来源（硬约束）**：第3层"台词"必须逐字取自 `atomic_scripts.json` 对应原子（已完成去括号/删除级词删除/空格注入/"（2026版）"省略），**禁止从原始脚本重组或改写**，否则原子化成果在喂模型前丢失（复现产品名连读、"2026版"被念出等）。分镜阶段 `wf_storyboard.md` 已构造的镜头 Prompt 应直接复用，不重复另造。
-- ⛔ **台词保真 diff（Prompt 构造完成后立即执行）**：把所有 Prompt 的台词段（`{...}`内文字）按顺序拼起来，与 `atomic_scripts.json` 全部 text 拼起来做逐字 diff。diff 非空 = **FAIL，列出具体改了哪几个字，重写 Prompt**。不等到生成后才查——改词在这里发生，就在这里拦。
+- ⛔ **台词保真 diff（Prompt 构造完成后立即执行）**：把所有 Prompt 的台词段（`{...}`内文字）按顺序拼起来，与 `atomic_scripts.json` 全部 **spoken** 拼起来做逐字 diff。diff 非空 = **FAIL，列出具体改了哪几个字，重写 Prompt**。不等到生成后才查——改词在这里发生，就在这里拦。
 - 遵循四层分层结构（完整规范见 `prompt_craft_guide.md`）:
   1. 素材与音色绑定层 — 按 `character_lock_protocol.md` 配置 ImageList：**每个镜头/每段都重复传入**该镜出场角色参考图（工具无状态，不能只在首镜传一次）；有音色锚定的角色同时通过 AudioList 传入 voice mp3
   2. 全局概述层（一句话）
