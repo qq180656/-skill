@@ -121,10 +121,29 @@ def check_orphans(rep: Report) -> list[tuple[str, str, str]]:
 
 
 # ── 检查 2：悬空引用（断链）────────────────────────────────
-REF_RE = re.compile(r"`([^`]+?\.md)`|\]\(([^)]+?\.md)\)")
+# 只认两种“真引用”：行内反引号包文件名、Markdown 链接。命令行示例(`` `cli --flag x.md` ``
+# 整段反引号)不算——那是可执行示例,不是文档导航链接。
+BACKTICK_RE = re.compile(r"`([^`\n]+?)`")
+MDLINK_RE = re.compile(r"\]\(([^)\n]+?\.md[^)]*)\)")
 PLACEHOLDER = re.compile(r"[{}<>*]")
 # 运行时产物（项目 _session/ 下生成，非静态文档）：引用它们不算断链
 RUNTIME_ARTIFACTS = {"creative_design.md", "storyboard.md"}
+# 外部/跨 skill 资源：本库不含，属有意引用，不当断链
+EXTERNAL_PREFIXES = ("fashion-film-studio/", "http://", "https://")
+# 仅“对标/平台原生/外部名”语境下提到的文件名：是外部平台的文件名，非本库链接
+EXTERNAL_NAME_CONTEXT = ("对标", "平台原生", "外部")
+# 运行时 _session 产物：路径含 _session/ 或文件名在运行时清单
+RUNTIME_PATH_MARK = "_session/"
+# 命令行标志：出现在反引号段且含这些 → 是 CLI 示例，整段跳过
+CLI_FLAG_RE = re.compile(r"(^|\s)(--?|python|node|pippit-tool-cli|npm|npx)\b")
+
+
+def _extract_refs(seg: str):
+    """从一段反引号文本/链接目标里抽出 .md 引用；命令行示例返回空。"""
+    if CLI_FLAG_RE.search(seg):
+        return []  # `python xxx.py --file y.md` → CLI 示例，非文档引用
+    refs = re.findall(r"[A-Za-z0-9_./\\\-]+\.md", seg)
+    return refs
 
 
 def check_broken_links(rep: Report) -> list[tuple[str, str, str]]:
@@ -132,10 +151,27 @@ def check_broken_links(rep: Report) -> list[tuple[str, str, str]]:
     for p in all_md():
         text = read(p)
         for i, line in enumerate(text.splitlines(), 1):
-            for m in REF_RE.finditer(line):
-                ref = (m.group(1) or m.group(2) or "").strip()
+            refs: list[str] = []
+            # 反引号段：逐段判断是 CLI 示例还是文件名引用
+            for seg in BACKTICK_RE.findall(line):
+                refs.extend(_extract_refs(seg))
+            # Markdown 链接 ](xxx.md)
+            for seg in MDLINK_RE.findall(line):
+                refs.append(seg.strip().split()[0])
+
+            for ref in refs:
+                ref = ref.strip()
                 if not ref or PLACEHOLDER.search(ref):
                     continue  # 跳过 {产品名} / <对应险种> 等模式
+                if Path(ref).name.startswith("_") and not ref.startswith("./"):
+                    continue  # `_53408.md` 是文件名后缀模式说明,非真实链接
+                if ref.startswith(EXTERNAL_PREFIXES) or RUNTIME_PATH_MARK in ref:
+                    continue  # 跨 skill / URL / 运行时 _session 产物
+                if any(ctx in line for ctx in EXTERNAL_NAME_CONTEXT):
+                    continue  # “对标平台原生 xxx.md”——外部文件名,非本库链接
+                # 临时排查文件（C:\\tmp 等）：正文语境为排查/台账路径，非文档链接
+                if "tmp" in ref or "mtx_" in ref:
+                    continue
                 if Path(ref).name in RUNTIME_ARTIFACTS:
                     continue  # 运行时产物，非静态文档
                 # 依次尝试：相对该文件目录 / 相对规范根 / 相对 compliance / 仅按 basename 全库
