@@ -32,6 +32,8 @@
 | SKIP(异常) | 异常等级之一:任务无意义/用户要求跳过 → 跳过进下一任务 |
 | 原子化(SCRIPT_ATOMIZE) | 把脚本拆成TTS友好原子单位:去括号/5-8字断句/空格注入/删除级词删除/数字保护 |
 | 期望朗读文本 | 原子化后的文本(atomic_scripts.json 的 spoken 字段)，VERIFYING/DIFF唯一比对基准 |
+| 预估时长 | **裸念词时长** = 口播字数(去括号) ÷ 语速。只算台词，不含停顿/动作/缓冲 |
+| 修正后总时长 | **完整时长** = 预估时长 + 停顿(逗号/句末/角色切换) + 纯动作镜头时长 + 段末缓冲(1.5-2s)。单段/extend 的判定一律用此值(算法见 `segmentation_packaging.md` Step 6) |
 | KEEP/CHANGE | 修改协议:明确哪些镜头保留(KEEP复用)、哪些重做(CHANGE) |
 | extend模式 | 单段超模型上限:前段text2video+后段reference2video+ffmpeg拼接 |
 | 音色锚定(AUDIO_ANCHOR) | 为多角色/指定音色生成音色样本，作生成/修复参考音 |
